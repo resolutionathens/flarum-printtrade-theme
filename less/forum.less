@@ -164,12 +164,12 @@ code, pre, kbd, samp, .code {
   display: block;
 }
 
-// Wordmark next to the logo. Rendered as a CSS ::after pseudo on the
-// .Header-title link rather than a real DOM node so Mithril redraws don't
-// blow it away. The literal string is intentional — Flarum's forum_title
-// setting can drift but the brand wordmark should not.
+// Wordmark next to the logo. Injected as a real <span class="Header-wordmark">
+// by extending HeaderTitle.prototype.view in js/src/forum/index.ts so the
+// markup mirrors parent's exactly. Mithril owns it and re-renders it each
+// draw, so no risk of getting clobbered.
 //
-// Parent markup:
+// Parent markup (source of truth):
 //   <a class="flex items-center gap-3">
 //     <img class="h-8 sm:h-9 w-auto" src="/brand/icon-black.svg">
 //     <span class="font-headline font-medium uppercase tracking-[0.18em]
@@ -182,17 +182,23 @@ code, pre, kbd, samp, .code {
   align-items: center;
   gap: 0.75rem; // gap-3
   text-decoration: none !important;
+}
 
-  &::after {
-    content: 'The Print Trade';
-    font-family: @pt-font-headline;
-    font-weight: 500; // font-medium
-    font-size: 18px; // sm:text-lg
-    text-transform: uppercase;
-    letter-spacing: 0.18em; // tracking-[0.18em]
-    line-height: 1; // leading-none
-    color: @pt-neutral-900;
-    white-space: nowrap;
+.Header-wordmark {
+  font-family: @pt-font-headline;
+  font-weight: 500;               // font-medium
+  font-size: 16px;                // text-base (mobile)
+  text-transform: uppercase;
+  letter-spacing: 0.18em;         // tracking-[0.18em]
+  line-height: 1;                 // leading-none
+  color: @pt-neutral-900;
+  white-space: nowrap;
+}
+
+// Parent bumps to text-lg at the sm breakpoint (640px+).
+@media (min-width: 640px) {
+  .Header-wordmark {
+    font-size: 18px;              // sm:text-lg
   }
 }
 
@@ -535,19 +541,25 @@ code, pre, kbd, samp, .code {
 }
 
 // Override Flarum's per-user hash color for default (letter-only) avatars.
-// Flarum renders `style="background: <hashcolor>"` on the <span> wrapper
-// (not background-color), so we match on the broader `background` token.
-// Uploaded <img> avatars don't get an inline style, so they're unaffected.
+// Flarum 1.8+ renders `style="--avatar-bg: <hashcolor>"` on the <span>
+// wrapper — a CSS custom property — not a direct `background:` declaration.
+// We override both the CSS variable AND the rendered background to handle
+// any future change in how Flarum surfaces this. Uploaded <img> avatars
+// don't get an inline style, so they're unaffected.
+.Avatar[style*="--avatar-bg"],
 .Avatar[style*="background"] {
+  --avatar-bg: @pt-neutral-900 !important;
   background: @pt-neutral-900 !important;
   background-color: @pt-neutral-900 !important;
   color: #fff !important;
 }
 
-// "You" — the avatar inside the SessionDropdown gets the brand blue so
-// users can scan to find their own posts in a long thread.
-.SessionDropdown .Avatar[style*="background"],
+// "You" — the avatar inside the SessionDropdown (header user pill) gets
+// the brand blue so the user can scan to find their own posts and so
+// the dropdown affordance reads as "yours" rather than as a stranger.
+.SessionDropdown .Avatar,
 .Header-controls .SessionDropdown .Avatar {
+  --avatar-bg: @pt-blue-500 !important;
   background: @pt-blue-500 !important;
   background-color: @pt-blue-500 !important;
   color: #fff !important;

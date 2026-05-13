@@ -15,6 +15,7 @@
 import app from 'flarum/forum/app';
 import { extend } from 'flarum/common/extend';
 import HeaderPrimary from 'flarum/forum/components/HeaderPrimary';
+import HeaderTitle from 'flarum/forum/components/HeaderTitle';
 
 // Mithril is exposed on the global as `m`.
 declare const m: any;
@@ -25,15 +26,17 @@ interface CrossNavLink {
   label: string;
   href?: string;
   active?: boolean;
-  logout?: boolean;
 }
 
-// Mirrors the parent site's nav order exactly:
-//   Directory · Limited · Exchanges · Rules · (Forum, active here)
-//   · Profile · Admin · Sign Out
-//
-// Admin is omitted since admin status here is per-product and the
-// forum has its own admin UI under /admin.
+// Mirrors the parent site's nav order. Two intentional deviations:
+//   - "Forum" inserted between Rules and Profile to mark the user's
+//     current section (active styling). Parent has no such item because
+//     the forum lives on a subdomain.
+//   - "Sign Out" omitted. Logout is parent-only by design: signing out
+//     of the forum without killing the parent's OIDC session would
+//     immediately re-auth the user on next request. The avatar dropdown
+//     also has its Log Out item hidden (see less/forum.less) to enforce
+//     this single source of truth.
 const CROSS_NAV: CrossNavLink[] = [
   { label: 'Directory', href: `${SITE_ORIGIN}/directory` },
   { label: 'Limited',   href: `${SITE_ORIGIN}/limited` },
@@ -41,55 +44,44 @@ const CROSS_NAV: CrossNavLink[] = [
   { label: 'Rules',     href: `${SITE_ORIGIN}/rules` },
   { label: 'Forum',     active: true },
   { label: 'Profile',   href: `${SITE_ORIGIN}/profile` },
-  { label: 'Sign Out',  logout: true },
 ];
 
 app.initializers.add('theprinttrade-printtrade-theme', () => {
   // eslint-disable-next-line no-console
   console.log('[printtrade-theme] initializer registered');
 
-  // Note: the "THE PRINT TRADE" wordmark next to the logo is rendered via a
-  // CSS ::after pseudo-element in less/forum.less (.Header-title a::after).
-  // Earlier versions tried injecting a real <span> via DOM, but Mithril
-  // redraws would blow it away. Pseudo-elements live outside the vDOM and
-  // survive every redraw with zero JS overhead.
+  // Inject a real <span class="Header-wordmark">The Print Trade</span>
+  // inside the .Header-title anchor, next to the .Header-logo img. This
+  // mirrors the parent site's markup exactly:
+  //
+  //   <a class="flex items-center gap-3">
+  //     <img class="h-8 sm:h-9 w-auto" src="/brand/icon-black.svg">
+  //     <span class="... text-base sm:text-lg ...">The Print Trade</span>
+  //   </a>
+  //
+  // An earlier iteration used a CSS ::after pseudo to avoid Mithril
+  // redraws clobbering injected DOM, but pseudo-elements render with
+  // subtly different metrics than real text (font hinting, kerning,
+  // baseline alignment) and they're not exposed to assistive tech the
+  // same way. Extending the component's view() rebuilds the vnode on
+  // every redraw so there's nothing to clobber.
+  extend(HeaderTitle.prototype, 'view', function (this: any, vnode: any) {
+    if (!vnode || !Array.isArray(vnode.children)) return;
+    const link = vnode.children.find((c: any) => c && typeof c === 'object' && c.tag);
+    if (!link || !Array.isArray(link.children)) return;
+    link.children.push(
+      m('span', { className: 'Header-wordmark', 'aria-hidden': 'true' }, 'The Print Trade')
+    );
+  });
 
   extend(HeaderPrimary.prototype, 'items', function (this: HeaderPrimary, items: any) {
     CROSS_NAV.forEach((link, i) => {
       let classes = 'pt-cross-nav-item';
       if (link.active) classes += ' pt-cross-nav-item--active';
-      if (link.logout) classes += ' pt-cross-nav-item--signout';
 
-      let node: any;
-      if (link.active) {
-        node = m('span', { className: classes }, link.label);
-      } else if (link.logout) {
-        node = m(
-          'a',
-          {
-            className: classes,
-            href: '#',
-            onclick: (e: Event) => {
-              e.preventDefault();
-              // Flarum's stock logout — POSTs CSRF-protected to /logout.
-              // app.session.logout() exists in 1.x and is the canonical path.
-              if (app.session && typeof (app.session as any).logout === 'function') {
-                (app.session as any).logout();
-              } else {
-                // Fallback: direct nav to the logout endpoint.
-                window.location.href = '/logout?token=' + (app.session as any).csrfToken;
-              }
-            },
-          },
-          link.label
-        );
-      } else {
-        node = m(
-          'a',
-          { className: classes, href: link.href, rel: 'noopener' },
-          link.label
-        );
-      }
+      const node = link.active
+        ? m('span', { className: classes }, link.label)
+        : m('a', { className: classes, href: link.href, rel: 'noopener' }, link.label);
 
       items.add(`pt-nav-${i}`, node, 200 - i);
     });
