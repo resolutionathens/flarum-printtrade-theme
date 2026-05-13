@@ -561,15 +561,19 @@ code, pre, kbd, samp, .code {
     border-bottom: 1px solid @pt-neutral-100 !important;
   }
 
-  // Active item underline doesn't make sense in a vertical list — use
-  // a left-border accent instead, matching how IndexPage-nav active
-  // items work.
+  // Active item indicator on mobile: a 3px brand-blue left bar with a
+  // proper gap before the label. The previous `padding-left: calc(1rem
+  // - 2px)` left the F of FORUM sitting only 14px from the bar, which
+  // visually read as cramped. Bumping to 1.5rem (24px) gives the
+  // indicator real breathing room and emphasises the active state
+  // through both color AND a small text indent — both common cues for
+  // "you are here" in side menus.
   .pt-cross-nav-item--active,
   .pt-cross-nav-item--active > a,
   .pt-cross-nav-item--active > span {
     border-bottom-color: @pt-neutral-100 !important;
-    border-left: 2px solid @pt-blue-500 !important;
-    padding-left: calc(1rem - 2px) !important;
+    border-left: 3px solid @pt-blue-500 !important;
+    padding-left: calc(1.5rem - 3px) !important;
   }
 }
 
