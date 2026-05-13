@@ -484,22 +484,50 @@ code, pre, kbd, samp, .code {
     padding: 0 !important;
   }
 
-  // Avatar block sits above the cross-nav in the drawer. Visually
-  // matches the convention of putting the current-user affordance at
-  // the top of side menus (Twitter, Mastodon, etc.) so it's the first
-  // thing a user reaches when they open the drawer.
+  // Avatar block sits above the cross-nav in the drawer, LEFT-aligned
+  // so it lines up with the menu items below. The earlier right-align
+  // pinned the avatar to the far edge of the drawer which read as
+  // disconnected from the rest of the nav.
   .App-header .Header-secondary {
     order: -1;
     margin: 0 !important;
-    padding: 1rem !important;
+    padding: 0.875rem 1rem !important;   // match cross-nav item padding
     width: 100%;
     border-bottom: 1px solid @pt-neutral-200;
-    justify-content: flex-end;     // right-align the avatar within the row
+    justify-content: flex-start;
   }
 
   .App-header .Header-secondary .Header-controls {
-    justify-content: flex-end;
+    justify-content: flex-start;
     width: auto;
+  }
+
+  // Active item on mobile uses only the left-border accent — the
+  // desktop ::after underline (bottom: -3px) fights with the hairline
+  // item separator below it, making the row look stacked-on-stacked
+  // and cluttered. Hide the pseudo on mobile.
+  .pt-cross-nav-item--active::after,
+  .pt-cross-nav-item--active > a::after,
+  .pt-cross-nav-item--active > span::after {
+    display: none;
+  }
+
+  // Focus styling: replace the browser's default orange focus ring on
+  // cross-nav links with a quiet brand background. The orange ring
+  // (Chrome on touch devices) clashes with everything else and reads
+  // as a validation error rather than a keyboard-focus hint.
+  .pt-cross-nav-item:focus,
+  .pt-cross-nav-item > a:focus,
+  .pt-cross-nav-item > span:focus {
+    outline: none !important;
+    background: @pt-neutral-50 !important;
+  }
+  .pt-cross-nav-item:focus-visible,
+  .pt-cross-nav-item > a:focus-visible,
+  .pt-cross-nav-item > span:focus-visible {
+    outline: 2px solid @pt-blue-500 !important;
+    outline-offset: -2px;
+    background: @pt-neutral-50 !important;
   }
 
   // Cross-nav becomes a vertical stack inside the drawer. The drawer
