@@ -14,13 +14,16 @@
 use Flarum\Extend;
 
 return [
+    // CSS-only theme in v0. The js/ directory is scaffolded for future
+    // overrides (eyebrow labels, dot separators, branded empty states),
+    // but we don't ship a JS bundle yet — a malformed stub bundle takes
+    // down the whole forum SPA, since Flarum concatenates every
+    // extension's bundle into a single forum.js.
     (new Extend\Frontend('forum'))
-        ->css(__DIR__ . '/less/forum.less')
-        ->js(__DIR__ . '/js/dist/forum.js'),
+        ->css(__DIR__ . '/less/forum.less'),
 
     (new Extend\Frontend('admin'))
-        ->css(__DIR__ . '/less/admin.less')
-        ->js(__DIR__ . '/js/dist/admin.js'),
+        ->css(__DIR__ . '/less/admin.less'),
 
     new Extend\Locales(__DIR__ . '/resources/locale'),
 ];
