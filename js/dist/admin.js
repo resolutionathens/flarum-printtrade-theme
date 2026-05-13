@@ -1,0 +1,2 @@
+(()=>{var e={n:r=>{var t=r&&r.__esModule?()=>r.default:()=>r;return e.d(t,{a:t}),t},d:(r,t)=>{for(var a in t)e.o(t,a)&&!e.o(r,a)&&Object.defineProperty(r,a,{enumerable:!0,get:t[a]})},o:(e,r)=>Object.prototype.hasOwnProperty.call(e,r)};(()=>{"use strict";const r=flarum.reg.get("core","admin/app");e.n(r)().initializers.add("theprinttrade-flarum-printtrade-theme",()=>{})})(),module.exports={}})();
+//# sourceMappingURL=admin.js.map

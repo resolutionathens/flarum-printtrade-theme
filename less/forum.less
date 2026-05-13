@@ -115,6 +115,40 @@ code, pre, kbd, samp, .code {
   box-shadow: none !important;
 }
 
+// Cross-product nav items — injected by js/forum into HeaderPrimary.
+// Match the parent site's nav (10px uppercased+tracked label, gray default,
+// blue + underline when active).
+.pt-cross-nav-item, .item-pt-nav-0, .item-pt-nav-1, .item-pt-nav-2,
+.item-pt-nav-3, .item-pt-nav-4, .item-pt-nav-5 {
+  .Button, > a {
+    background: transparent !important;
+    box-shadow: none !important;
+    border: 0 !important;
+    color: @pt-neutral-500 !important;
+    font-family: @pt-font-label !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.15em !important;
+    text-transform: uppercase;
+    padding: 0.25rem 0.5rem !important;
+    text-decoration: none;
+
+    &:hover, &:focus {
+      color: @pt-neutral-900 !important;
+      background: transparent !important;
+      text-decoration: none;
+    }
+  }
+}
+.pt-cross-nav-item--active .Button,
+.pt-cross-nav-item--active > a {
+  color: @pt-blue-500 !important;
+  border-bottom: 1px solid @pt-blue-500 !important;
+  border-radius: 0 !important;
+  padding-bottom: calc(0.25rem - 1px) !important;
+  cursor: default !important;
+}
+
 // User pill / session dropdown — strip the bg, leave just text + avatar
 .SessionDropdown > .Button {
   border: 0 !important;
