@@ -47,6 +47,13 @@
 @code-font-family:    @pt-font-mono;
 @border-radius:       0;
 
+// Match parent's header height: py-5 (40px) + 36px logo + 1px border = 77px.
+// Flarum defaults to ~60px which makes the forum feel pinched compared to
+// the parent. Bumping this also reserves the correct scroll-padding so
+// sticky-nav anchors don't get clipped.
+@header-height:       76px;
+@header-height-phone: 60px;
+
 // ─── Global ─────────────────────────────────────────────────────────
 body, .App {
   font-family: @pt-font-body;
@@ -88,6 +95,8 @@ code, pre, kbd, samp, .code {
   border-bottom: 1px solid @pt-neutral-900 !important;
   padding-top: 1.25rem !important;
   padding-bottom: 1.25rem !important;
+  min-height: 76px !important;
+  height: auto !important;
   position: sticky;
   top: 0;
   z-index: 50;
@@ -112,16 +121,26 @@ code, pre, kbd, samp, .code {
   min-width: 0;
 }
 
-// Hide Header-secondary (search, notifications, user pill) entirely.
-// All necessary actions are in the cross-nav (Sign Out, Profile).
-// Forum-specific settings/admin/notifications reachable via direct URL:
-//   /settings, /admin, /notifications
-.App-header .Header-secondary,
-.App-header #header-secondary {
+// Header-secondary stays visible but only as the SessionDropdown avatar —
+// search and bell are hidden (search lives in IndexPage toolbar; bell only
+// reachable via /notifications for now). The avatar dropdown is the only
+// path to forum-side actions (Forum Profile, Settings, Logout) since the
+// cross-nav "Profile" link routes to the PARENT profile, not the forum
+// profile. Without this, there's no UI affordance to reach /u/<username>.
+.App-header .Header-secondary {
+  margin-left: 0.75rem !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+// Hide everything in Header-secondary except the SessionDropdown.
+// Stock items in Header-secondary: search, notifications, sessionDropdown.
+.App-header .Header-secondary > .item-search,
+.App-header .Header-secondary > .item-notifications {
   display: none !important;
 }
 
-// Anchor cross-nav to the right edge of the container.
+// Anchor cross-nav + avatar block to the right edge of the container.
 .App-header .Header-primary,
 .App-header #header-primary {
   margin-left: auto !important;
@@ -304,6 +323,32 @@ code, pre, kbd, samp, .code {
   min-width: 0;
 }
 
+// Responsive breakpoint — matches the parent site's `hidden md:flex`.
+// Below 768px the cross-nav collapses entirely and only the avatar
+// dropdown remains visible on the right side. Flarum's stock hamburger
+// drawer (.Drawer-toggle button rendered by App.js) is the way back to
+// the discussion list / sidebar nav at narrow widths.
+@media (max-width: 767px) {
+  .App-header .Header-primary,
+  .App-header #header-primary {
+    display: none !important;
+  }
+
+  // Wordmark hides too — the icon alone identifies us on mobile.
+  .Header-title a::after {
+    display: none;
+  }
+}
+
+// Slightly tighter container on mobile to match parent's px-4 → sm:px-6.
+@media (max-width: 639px) {
+  .App-header .container,
+  .App-header-primary .container {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+}
+
 // Notification bell — parent site has no notifications in the header,
 // but a forum genuinely needs them so we keep the icon as a quiet,
 // chromeless button matching the nav's gray-500 / gray-900 hover.
@@ -338,8 +383,11 @@ code, pre, kbd, samp, .code {
 
 // User pill — keep the 24px avatar as the dropdown affordance; hide the
 // username label entirely. The dropdown still opens on click, and the
-// menu items show the username + "Profile / Logout" inside. Slimmer
-// pill matches the parent site's spare right-side nav.
+// menu items show "Forum Profile / Settings / Logout" inside.
+//
+// Without this dropdown the user has NO path to their own forum profile
+// (/u/<username>) because the cross-nav "Profile" link routes to the
+// PARENT site's unified profile, not the forum-side one.
 .SessionDropdown > .Button {
   padding: 0.25rem !important;
   gap: 0;
@@ -353,6 +401,13 @@ code, pre, kbd, samp, .code {
   .icon-caret-down {
     display: none !important;
   }
+}
+
+// The Logout item inside the SessionDropdown menu is redundant — the
+// cross-nav already has a SIGN OUT button matching the parent. Hide it
+// so users see only forum-specific actions (Profile, Settings).
+.SessionDropdown-menu .item-logOut {
+  display: none !important;
 }
 
 .Header-controls > .item > .Button:hover,
