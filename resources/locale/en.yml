@@ -4,10 +4,15 @@
 # from the translation key fof-oauth.lib.providers.<provider-name>.
 # blt950's name() returns "generic", so the default label is literally
 # "Generic". We override it here so the button reads
-# "Log In with theprinttrade.com" without having to patch the vendor
+# "Log In with The Print Trade" without having to patch the vendor
 # YAML inside the container (which doesn't survive image rebuilds).
+#
+# Shorter "The Print Trade" preferred over "theprinttrade.com" because
+# the .com tail pushed the rendered uppercase + tracked button label
+# past the modal's content width and triggered ellipsis truncation
+# ("LOG IN WITH T…").
 
 fof-oauth:
   lib:
     providers:
-      generic: theprinttrade.com
+      generic: The Print Trade

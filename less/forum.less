@@ -349,18 +349,38 @@ code, pre, kbd, samp, .code {
   color: @pt-neutral-900 !important;
 }
 
-// Active state — `text-blue-500 border-b border-blue-500 pb-0.5` from parent.
-// The 1px border + 2px padding-bottom places the underline 2px below the
-// text baseline. flex items-center on the parent absorbs the +3px height
-// without visibly shifting the active item's baseline.
+// Active state — `text-blue-500 border-b border-blue-500 pb-0.5` from
+// parent.
+//
+// We deviate from parent's exact `padding-bottom: 2px + border-bottom:
+// 1px` recipe and use a positioned ::after instead because adding 3px
+// of layout height to the active item makes Header-primary's <ul>
+// taller than Header-secondary's <ul> (which only contains the Log In
+// button). With both uls flex-centered within `.container`, the
+// resulting different intrinsic heights produce sub-pixel rounding
+// drift that visibly misaligns LOG IN against PROFILE. A positioned
+// pseudo keeps every cross-nav item at exactly 10px tall so both uls
+// match perfectly and centering is exact.
 .pt-cross-nav-item--active,
 .pt-cross-nav-item--active > a,
 .pt-cross-nav-item--active > span {
   color: @pt-blue-500 !important;
-  padding-bottom: 2px !important;                       // pb-0.5
-  border-bottom: 1px solid @pt-blue-500 !important;
-  border-radius: 0 !important;
+  position: relative;
   cursor: default !important;
+  border: 0 !important;
+  padding: 0 !important;
+}
+
+.pt-cross-nav-item--active::after,
+.pt-cross-nav-item--active > a::after,
+.pt-cross-nav-item--active > span::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -3px;
+  height: 1px;
+  background: @pt-blue-500;
 }
 
 // "Sign Out" gets the quieter neutral-400 default (parent uses
@@ -1169,9 +1189,21 @@ body {
     letter-spacing: 0.08em;
     font-size: 13px;
     width: 100%;
-    padding: 0.875rem 1.25rem;
+    padding: 0.875rem 1rem;
+
+    // Flarum's .Button defaults to `white-space: nowrap; overflow: hidden;
+    // text-overflow: ellipsis`, which truncated "LOG IN WITH THE PRINT
+    // TRADE" mid-word (rendered as "LOG IN WITH T…" on narrower modal
+    // widths). Allow the label to wrap to two lines if needed — the
+    // brand-blue CTA still reads as a single tap target.
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    line-height: 1.3;
+    height: auto;
 
     .icon, .fas, .fa { color: #fff; margin-right: 0.5rem; }
+    .Button-label { white-space: normal; }
 
     &:hover, &:focus { background: @pt-blue-600; border-color: @pt-blue-600; color: #fff; }
   }
