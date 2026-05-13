@@ -52,9 +52,53 @@ const CROSS_NAV: CrossNavLink[] = [
   { label: 'Profile',   href: `${SITE_ORIGIN}/profile` },
 ];
 
+// Footer — mirrors the parent site's footer exactly.
+//
+// Flarum 1.x has no default footer, and no `Footer*` component to extend.
+// We append a static <footer.pt-footer> as a direct child of <body>,
+// which puts it OUTSIDE Mithril's #app root — so SPA redraws never
+// touch it. One-time inject at boot; persists across navigations.
+//
+// Mirror source from theprinttrade.com:
+//   <footer class="border-t border-neutral-200">
+//     <div class="max-w-6xl mx-auto px-4 sm:px-6 py-8 text-center">
+//       <p class="text-[10px] font-bold tracking-[0.2em] uppercase
+//                 text-neutral-400">The Print Trade</p>
+//       <p class="text-xs text-neutral-400 mt-2">A community for trading
+//          collector-grade photography prints.</p>
+//       <div class="flex items-center justify-center gap-3 mt-2">
+//         About · Terms of Use · Privacy Policy · Feedback
+//       </div>
+//     </div>
+//   </footer>
+function injectFooter(): void {
+  if (document.querySelector('.pt-footer')) return;
+
+  const footer = document.createElement('footer');
+  footer.className = 'pt-footer';
+  footer.innerHTML = `
+    <div class="pt-footer-inner">
+      <p class="pt-footer-brand">The Print Trade</p>
+      <p class="pt-footer-tagline">A community for trading collector-grade photography prints.</p>
+      <div class="pt-footer-links">
+        <a href="${SITE_ORIGIN}/about">About</a>
+        <span class="pt-footer-dot">·</span>
+        <a href="${SITE_ORIGIN}/terms">Terms of Use</a>
+        <span class="pt-footer-dot">·</span>
+        <a href="${SITE_ORIGIN}/privacy">Privacy Policy</a>
+        <span class="pt-footer-dot">·</span>
+        <a href="https://theprinttrade.userjot.com/" target="_blank" rel="noopener">Feedback</a>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(footer);
+}
+
 app.initializers.add('theprinttrade-printtrade-theme', () => {
   // eslint-disable-next-line no-console
   console.log('[printtrade-theme] initializer registered');
+
+  injectFooter();
 
   extend(HeaderPrimary.prototype, 'items', function (this: HeaderPrimary, items: any) {
     CROSS_NAV.forEach((link, i) => {
