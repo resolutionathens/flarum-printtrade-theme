@@ -4,9 +4,7 @@
     "type": "flarum-extension",
     "license": "MIT",
     "require": {
-        "flarum/core": "^1.8.0",
-        "fof/oauth": "^2.0",
-        "blt950/oauth-generic": "*"
+        "flarum/core": "^1.8.0"
     },
     "authors": [
         {
