@@ -46,12 +46,16 @@ interface CrossNavLink {
 //     immediately re-auth the user on next request. The avatar dropdown
 //     also has its Log Out item hidden (see less/forum.less) to enforce
 //     this single source of truth.
+// "Forum" carries both `active: true` AND an href to the forum root —
+// active so it gets the brand-blue underline, href so it works as a
+// "home" link from sub-pages (tag views, discussions, etc.) the same
+// way the Darkroom logo on the left does.
 const CROSS_NAV: CrossNavLink[] = [
   { label: 'Directory', href: `${SITE_ORIGIN}/directory` },
   { label: 'Limited',   href: `${SITE_ORIGIN}/limited` },
   { label: 'Exchanges', href: `${SITE_ORIGIN}/exchanges` },
   { label: 'Rules',     href: `${SITE_ORIGIN}/rules` },
-  { label: 'Forum',     active: true },
+  { label: 'Forum',     href: '/', active: true },
   { label: 'Profile',   href: `${SITE_ORIGIN}/profile` },
 ];
 
@@ -108,9 +112,12 @@ app.initializers.add('theprinttrade-printtrade-theme', () => {
       let classes = 'pt-cross-nav-item';
       if (link.active) classes += ' pt-cross-nav-item--active';
 
-      const node = link.active
-        ? m('span', { className: classes }, link.label)
-        : m('a', { className: classes, href: link.href, rel: 'noopener' }, link.label);
+      // If the item has an href, always render as <a> (even when active,
+      // so it stays clickable as a "home" link from sub-pages). The
+      // active class still drives the underline styling.
+      const node = link.href
+        ? m('a', { className: classes, href: link.href, rel: 'noopener' }, link.label)
+        : m('span', { className: classes }, link.label);
 
       items.add(`pt-nav-${i}`, node, 200 - i);
     });
