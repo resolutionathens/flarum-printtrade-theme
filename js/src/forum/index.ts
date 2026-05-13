@@ -34,20 +34,11 @@ app.initializers.add('theprinttrade-printtrade-theme', () => {
   // eslint-disable-next-line no-console
   console.log('[printtrade-theme] initializer registered');
 
-  // Inject "THE PRINT TRADE" as a styled span next to the icon-only logo,
-  // mirroring the parent site's <img> + <span>The Print Trade</span>
-  // pattern. Flarum's stock template renders ONLY the logo image when
-  // logo_path is set (suppressing the forum_title), so we patch Header
-  // via DOM hook after the logo renders.
-  //
-  // We do this via a Mithril oncreate on the logo's parent link so it
-  // survives Mithril redraws without us having to manually re-inject.
-  ensureHeaderTitleSpan();
-  // Re-check on every route change (in case the header re-renders).
-  if (typeof window !== 'undefined') {
-    document.addEventListener('DOMContentLoaded', ensureHeaderTitleSpan);
-    setInterval(ensureHeaderTitleSpan, 1000);
-  }
+  // Note: the "THE PRINT TRADE" wordmark next to the logo is rendered via a
+  // CSS ::after pseudo-element in less/forum.less (.Header-title a::after).
+  // Earlier versions tried injecting a real <span> via DOM, but Mithril
+  // redraws would blow it away. Pseudo-elements live outside the vDOM and
+  // survive every redraw with zero JS overhead.
 
   extend(HeaderPrimary.prototype, 'items', function (this: HeaderPrimary, items: any) {
     CROSS_NAV.forEach((link, i) => {
@@ -71,21 +62,3 @@ app.initializers.add('theprinttrade-printtrade-theme', () => {
     });
   });
 });
-
-/**
- * Mounts a "THE PRINT TRADE" wordmark span next to the icon logo. Idempotent
- * — skips when the span already exists. setInterval guards against Mithril
- * redraws blowing it away, which can happen during page transitions before
- * the header component re-mounts.
- */
-function ensureHeaderTitleSpan(): void {
-  const headerTitle = document.querySelector('.Header-title');
-  if (!headerTitle) return;
-  if (headerTitle.querySelector('.pt-wordmark')) return;
-  const link = headerTitle.querySelector('a');
-  if (!link) return;
-  const span = document.createElement('span');
-  span.className = 'pt-wordmark';
-  span.textContent = 'The Print Trade';
-  link.appendChild(span);
-}
