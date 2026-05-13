@@ -69,31 +69,51 @@ code, pre, kbd, samp, .code {
 
 // ─── Header (paper-white with black hairline, NOT colored) ──────────
 //
-// We force this even when admin sets theme_colored_header=1, because
-// the parent site has a paper-white header and brand consistency wins.
+// Mirrors theprinttrade.com header exactly: paper-white background,
+// single black hairline, generous vertical padding (~20px / 1.25rem),
+// icon-only logo + uppercased+tracked "THE PRINT TRADE" span next to it.
 .App-header, .App-header-primary {
   background: #fff !important;
   color: @pt-neutral-900 !important;
   box-shadow: none !important;
   border-bottom: 1px solid @pt-neutral-900;
+  padding-top: 1rem !important;
+  padding-bottom: 1rem !important;
 }
 
-.Header-title, .Header-title a {
+.Header-title {
+  margin: 0 !important;
+  padding: 0 !important;
+  display: flex;
+  align-items: center;
+
+  > a {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    text-decoration: none !important;
+  }
+}
+
+// Logo is the icon-only SVG (mountain in rect, no text). Sized to match
+// the parent site's h-9 (~36px) on desktop.
+.Header-logo {
+  height: 32px !important;
+  width: auto;
+  margin: 0 !important;
+}
+
+// Wordmark next to the logo — injected via js/forum/index.ts.
+// Mirrors parent's font-headline font-medium uppercase tracking-[0.18em] text-lg.
+.pt-wordmark {
   font-family: @pt-font-headline;
-  font-weight: 700;
+  font-weight: 500;
+  font-size: 16px;
   text-transform: uppercase;
   letter-spacing: 0.18em;
-  font-size: 14px;
-  color: @pt-neutral-900 !important;
-}
-
-.Header-logo {
-  // Wordmark SVG comes in white — invert it to black for the paper header.
-  // We use a CSS filter rather than swapping image src so admin can still
-  // upload a new logo via the upload button.
-  height: 28px;
-  width: auto;
-  filter: brightness(0); // SVG → pure black, regardless of source color
+  color: @pt-neutral-900;
+  line-height: 1;
+  white-space: nowrap;
 }
 
 // Header controls: search input, notification bell, user pill, etc.
@@ -116,10 +136,8 @@ code, pre, kbd, samp, .code {
 }
 
 // Cross-product nav items — injected by js/forum into HeaderPrimary.
-// Match the parent site's nav (10px uppercased+tracked label, gray default,
-// blue + underline when active). Rules apply to the element directly (a
-// for inactive, span for active) AND to any .Button wrapper Flarum may
-// inject downstream, so the styling holds regardless of element shape.
+// Match parent's nav typography exactly: ~12px uppercased+tracked label,
+// gray default, blue + underline when active, generous horizontal spacing.
 .pt-cross-nav-item,
 .pt-cross-nav-item .Button,
 .pt-cross-nav-item > a,
@@ -129,11 +147,12 @@ code, pre, kbd, samp, .code {
   border: 0 !important;
   color: @pt-neutral-500 !important;
   font-family: @pt-font-label !important;
-  font-size: 10px !important;
+  font-size: 12px !important;
   font-weight: 700 !important;
   letter-spacing: 0.15em !important;
   text-transform: uppercase !important;
-  padding: 0.25rem 0.5rem !important;
+  padding: 0.5rem 0 !important;
+  margin: 0 1rem !important;
   text-decoration: none !important;
   display: inline-block;
   line-height: 1.4;
@@ -171,20 +190,31 @@ code, pre, kbd, samp, .code {
   .Avatar { margin-right: 0.5rem; }
 }
 
-// Header search input gets its own treatment — white bg, hairline border
+// Header search input gets its own treatment — narrow, white bg, hairline
+// border. Keep it from competing with the nav for visual weight.
 .Header-controls .Search-input,
 .Header-controls input[type="search"] {
   background: #fff !important;
   border: 1px solid @pt-neutral-200 !important;
   color: @pt-neutral-900 !important;
   border-radius: 0;
-  padding-left: 2.25rem;
+  padding-left: 2rem !important;
+  font-size: 12px !important;
+  max-width: 200px;
+  height: 32px;
 
-  &::placeholder { color: @pt-neutral-400 !important; }
+  &::placeholder { color: @pt-neutral-400 !important; font-size: 12px; }
   &:focus { border-color: @pt-neutral-900 !important; }
 }
 .Header-controls .Search .icon, .Header-controls .Search-input + .icon {
   color: @pt-neutral-400 !important;
+  font-size: 12px;
+}
+
+// Notification bell — smaller, quieter
+.NotificationsDropdown > .Button {
+  padding: 0.5rem !important;
+  font-size: 14px;
 }
 
 .Header-controls > .item > .Button:hover,
