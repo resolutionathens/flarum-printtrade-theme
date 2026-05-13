@@ -21,13 +21,27 @@ declare const m: any;
 
 const SITE_ORIGIN = 'https://theprinttrade.com';
 
-const CROSS_NAV: Array<{ label: string; href?: string; active?: boolean }> = [
+interface CrossNavLink {
+  label: string;
+  href?: string;
+  active?: boolean;
+  logout?: boolean;
+}
+
+// Mirrors the parent site's nav order exactly:
+//   Directory · Limited · Exchanges · Rules · (Forum, active here)
+//   · Profile · Admin · Sign Out
+//
+// Admin is omitted since admin status here is per-product and the
+// forum has its own admin UI under /admin.
+const CROSS_NAV: CrossNavLink[] = [
   { label: 'Directory', href: `${SITE_ORIGIN}/directory` },
   { label: 'Limited',   href: `${SITE_ORIGIN}/limited` },
   { label: 'Exchanges', href: `${SITE_ORIGIN}/exchanges` },
   { label: 'Rules',     href: `${SITE_ORIGIN}/rules` },
   { label: 'Forum',     active: true },
   { label: 'Profile',   href: `${SITE_ORIGIN}/profile` },
+  { label: 'Sign Out',  logout: true },
 ];
 
 app.initializers.add('theprinttrade-printtrade-theme', () => {
@@ -42,22 +56,41 @@ app.initializers.add('theprinttrade-printtrade-theme', () => {
 
   extend(HeaderPrimary.prototype, 'items', function (this: HeaderPrimary, items: any) {
     CROSS_NAV.forEach((link, i) => {
-      const className =
-        'pt-cross-nav-item' + (link.active ? ' pt-cross-nav-item--active' : '');
+      let classes = 'pt-cross-nav-item';
+      if (link.active) classes += ' pt-cross-nav-item--active';
+      if (link.logout) classes += ' pt-cross-nav-item--signout';
 
-      const node = link.active
-        ? m('span', { className }, link.label)
-        : m(
-            'a',
-            {
-              className,
-              href: link.href,
-              rel: 'noopener',
+      let node: any;
+      if (link.active) {
+        node = m('span', { className: classes }, link.label);
+      } else if (link.logout) {
+        node = m(
+          'a',
+          {
+            className: classes,
+            href: '#',
+            onclick: (e: Event) => {
+              e.preventDefault();
+              // Flarum's stock logout — POSTs CSRF-protected to /logout.
+              // app.session.logout() exists in 1.x and is the canonical path.
+              if (app.session && typeof (app.session as any).logout === 'function') {
+                (app.session as any).logout();
+              } else {
+                // Fallback: direct nav to the logout endpoint.
+                window.location.href = '/logout?token=' + (app.session as any).csrfToken;
+              }
             },
-            link.label
-          );
+          },
+          link.label
+        );
+      } else {
+        node = m(
+          'a',
+          { className: classes, href: link.href, rel: 'noopener' },
+          link.label
+        );
+      }
 
-      // Wrap in <li class="item-pt-nav-N"> for Flarum's ItemList renderer.
       items.add(`pt-nav-${i}`, node, 200 - i);
     });
   });
