@@ -380,11 +380,42 @@ code, pre, kbd, samp, .code {
 //
 // PT design system uses sharp rectangles. Pure 0px feels too harsh for
 // faces, so we land on 2px — still visibly square.
+//
+// Flarum's default avatar (no uploaded image) is a colored square whose
+// background is derived from a hash of the user's id, producing pastel
+// pinks/greens/blues that fight the brand palette. We override:
+// - Inline background-color via the attribute selector so hash-colors
+//   never reach the user
+// - All default avatars get a flat neutral-900 square + white initial
+//   typeset in Epilogue 800 (matches the design system's editorial
+//   numerals — see .numeral in app/assets/main.css)
+// - Avatars in the user's own SessionDropdown get the brand blue
+//   instead, marking "you" with a quiet accent
 .Avatar {
   border-radius: 2px;
   box-shadow: none;
-  font-family: @pt-font-headline;
-  font-weight: 700;
+  font-family: @pt-font-headline !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+}
+
+// Override Flarum's per-user hash color for default (letter-only) avatars.
+// Uploaded avatars are <img> children, which the [style*=background-color]
+// selector won't match.
+.Avatar[style*="background-color"] {
+  background: @pt-neutral-900 !important;
+  background-color: @pt-neutral-900 !important;
+  color: #fff !important;
+}
+
+// "You" — the avatar inside the SessionDropdown gets the brand blue so
+// users can scan to find their own posts in a long thread.
+.SessionDropdown .Avatar[style*="background-color"],
+.Header-controls .SessionDropdown .Avatar {
+  background: @pt-blue-500 !important;
+  background-color: @pt-blue-500 !important;
+  color: #fff !important;
 }
 
 // ─── Links + accents ────────────────────────────────────────────────
