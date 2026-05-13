@@ -1,16 +1,23 @@
 /*
  * theprinttrade/flarum-printtrade-theme — forum entry
  *
- * Injects a cross-product nav into the forum HeaderPrimary so users
- * can move between the forum (this app) and theprinttrade.com sections
+ * Injects a cross-product nav into the forum header so users can move
+ * between forum.theprinttrade.com and theprinttrade.com sections
  * without leaving via the browser. Mirrors the parent site's nav and
  * marks "Forum" as the current section.
+ *
+ * Uses raw Mithril hyperscript (`m('a', ...)`) rather than the
+ * `LinkButton.component()` factory because the latter has been a moving
+ * target across Flarum + Mithril versions, and we want the bundle to be
+ * robust against minor core upgrades.
  */
 
 import app from 'flarum/forum/app';
 import { extend } from 'flarum/common/extend';
 import HeaderPrimary from 'flarum/forum/components/HeaderPrimary';
-import LinkButton from 'flarum/common/components/LinkButton';
+
+// Mithril is exposed on the global as `m`.
+declare const m: any;
 
 const SITE_ORIGIN = 'https://theprinttrade.com';
 
@@ -24,26 +31,30 @@ const CROSS_NAV: Array<{ label: string; href?: string; active?: boolean }> = [
 ];
 
 app.initializers.add('theprinttrade-printtrade-theme', () => {
+  // Surface the initializer in the browser console so we can verify
+  // load even without devtools breakpoints.
+  // eslint-disable-next-line no-console
+  console.log('[printtrade-theme] initializer registered');
+
   extend(HeaderPrimary.prototype, 'items', function (this: HeaderPrimary, items: any) {
     CROSS_NAV.forEach((link, i) => {
-      items.add(
-        `pt-nav-${i}`,
-        LinkButton.component(
-          {
-            href: link.href || '#',
-            external: true,
-            force: false,
-            className:
-              'pt-cross-nav-item' + (link.active ? ' pt-cross-nav-item--active' : ''),
-            // Disabled link for the current section; others navigate.
-            disabled: link.active,
-          },
-          link.label
-        ),
-        // Render BEFORE Flarum's stock items (which have priority 100, 90...)
-        // so cross-product nav appears at the left of HeaderPrimary.
-        200 - i
-      );
+      const className =
+        'pt-cross-nav-item' + (link.active ? ' pt-cross-nav-item--active' : '');
+
+      const node = link.active
+        ? m('span', { className }, link.label)
+        : m(
+            'a',
+            {
+              className,
+              href: link.href,
+              rel: 'noopener',
+            },
+            link.label
+          );
+
+      // Wrap in <li class="item-pt-nav-N"> for Flarum's ItemList renderer.
+      items.add(`pt-nav-${i}`, node, 200 - i);
     });
   });
 });
