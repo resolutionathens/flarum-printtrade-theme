@@ -26,7 +26,15 @@ less/forum.less            — Main theme stylesheet (~900 lines)
 less/admin.less            — Minimal admin overrides
 js/forum.ts                — Webpack entry (re-exports src/forum)
 js/src/forum/index.ts      — Mithril `extend()` calls + footer injection
+                             + LogInButton onclick override (top-level redirect)
 js/dist/forum.js           — Compiled bundle (committed)
+src/Forum/Auth/TopLevelResponseFactory.php
+                           — Subclass of Flarum core's auth ResponseFactory.
+                             Auto-creates SSO users; returns RedirectResponse
+                             instead of popup-completion HTML. See "SSO flow".
+src/Provider/AuthOverrideProvider.php
+                           — Service container binding that swaps the stock
+                             ResponseFactory for TopLevelResponseFactory.
 resources/locale/en.yml    — Locale string overrides (button labels, etc.)
 ```
 
@@ -105,6 +113,85 @@ composer's installed-version metadata in sync with what's actually on disk.
   The element has `Button FoFLogInButton LogInButton--<provider>`. Selectors
   like `.Button.LogInButton` never match.
 
+## SSO flow
+
+Authentication is OIDC against Better-Auth on `theprinttrade.com`, fronted
+by `fof/oauth` + `blt950/oauth-generic`. We've overridden two parts of the
+stock flow because both broke for iOS testers:
+
+### 1. Top-level redirect instead of `window.open` popup
+
+fof/oauth's stock JS opens the OAuth roundtrip in `window.open(...)`.
+**iOS Safari opens these as new tabs where `window.opener` postMessage
+silently fails** — the popup never tells the parent window "you're
+authed," and the user gets stuck.
+
+In `js/src/forum/index.ts`, we `extend(LogInButton.prototype, 'initAttrs')`
+to overwrite the `attrs.onclick` (which fof/oauth set to a popup-opener)
+with `window.location.assign(baseUrl + attrs.path)`. **This only works
+because our theme is last in `extensions_enabled`** — both extends
+modify the same prototype method, and the last one registered wins.
+
+### 2. Server-side ResponseFactory override
+
+`Flarum\Forum\Auth\ResponseFactory::makeResponse()` always returns
+`<script>window.close(); window.opener.app.authenticationComplete(...)`
+HTML — it assumes a popup. With a top-level redirect, that script blows
+up (opener is null).
+
+`src/Forum/Auth/TopLevelResponseFactory.php` subclasses it and:
+
+- Returns `RedirectResponse('/')` from `makeResponse()` instead. Session
+  + remember cookies are attached by `makeLoggedInResponse()` before
+  reaching `makeResponse()`, so they carry through the redirect.
+- Overrides `make()` to auto-create the user from the OIDC payload when
+  all required fields are provided (`username`, `email`). Skips the
+  `SignUpModal` entirely — that modal was a UX dead-end in our SSO-only
+  setup (its "Already have an account? Log In" link sends users back
+  through OAuth, which re-shows the modal, infinite loop).
+- Includes a `ensureUniqueUsername()` helper that appends a numeric
+  suffix on collision (rare, but possible if two parent-site accounts
+  pick the same preferred_username).
+
+`src/Provider/AuthOverrideProvider.php` is the service provider that
+swaps the binding via `$container->extend(ResponseFactory::class, ...)`.
+
+### Required settings (must stay = 1 for auto-create to work)
+
+| Setting | Value | What it does |
+|---|---|---|
+| `fof-oauth.generic.force_userid` | `1` | OIDC's `preferred_username` becomes `provide('username', ...)` rather than `suggest(...)`. Without this, username isn't trusted and auto-create falls through to the modal. |
+| `fof-oauth.generic.force_email` | `1` | OIDC's `email` becomes a trusted-provided field. |
+| `fof-oauth.generic.force_name` | `1` | OIDC's `name` becomes a locked nickname. |
+| `fof-oauth.generic.id_parameter` | `preferred_username` | OIDC claim used as the stable identifier in `flarum_login_providers.identifier`. |
+
+⚠️ `id_parameter = preferred_username` is **not the right choice long-term** —
+preferred_username can change in Better-Auth, which would orphan the
+linked-account row. The correct value is `sub`. Switching now would
+require a migration that maps existing identifiers to subs. See open items.
+
+### Quick regression test
+
+```bash
+# Baseline
+ssh root@178.156.135.154 docker exec mariadb-... mariadb -uflarum -p... flarum \
+  -e 'SELECT COUNT(*) FROM flarum_users; SELECT COUNT(*) FROM flarum_registration_tokens;'
+
+# Create a throwaway account on theprinttrade.com (incognito browser,
+# fresh email). Then go to forum.theprinttrade.com in that same
+# incognito session and click "Log In with The Print Trade".
+
+# Verify (should see +1 user, +1 login_provider, 0 registration_tokens):
+ssh root@178.156.135.154 docker exec mariadb-... mariadb -uflarum -p... flarum \
+  -e 'SELECT id, username, nickname, email, joined_at FROM flarum_users ORDER BY id DESC LIMIT 3; \
+      SELECT * FROM flarum_login_providers ORDER BY id DESC LIMIT 3; \
+      SELECT COUNT(*) FROM flarum_registration_tokens;'
+
+# Cleanup:
+ssh root@178.156.135.154 docker exec mariadb-... mariadb -uflarum -p... flarum \
+  -e "DELETE FROM flarum_login_providers WHERE user_id=N; DELETE FROM flarum_users WHERE id=N;"
+```
+
 ## Locale overrides
 
 `blt950/oauth-generic` ships a locale that sets
@@ -166,14 +253,25 @@ low alpha looked like lavender on the `.TagHero` background; we override
 1. **Single sign-out is incomplete**. Forum has no logout affordance, and
    logging out at the parent does not invalidate the forum session. Either
    add RP-initiated OIDC logout to fof/oauth, or add a Logout link in the
-   avatar dropdown that hits both endpoints.
-2. **Fix composer on the container** so future deploys can use
+   avatar dropdown that hits both endpoints. **Related quirk surfaced
+   during iOS testing**: a returning user with an active parent session
+   gets silent OIDC consent approval — they can't "switch accounts" from
+   inside the forum without first logging out at the parent. Likely the
+   right behavior for SSO-only, but worth knowing.
+2. **`id_parameter` should be `sub`, not `preferred_username`**. Current
+   linked-account rows use the preferred_username as identifier, which
+   Better-Auth allows users to change. Migration: for each existing row,
+   look up the user's current `sub` from theprinttrade.com and update
+   the `identifier` column. Until done, a username rename at the parent
+   silently orphans the forum link and triggers a duplicate auto-create
+   on next login.
+3. **Fix composer on the container** so future deploys can use
    `composer update` instead of the tarball workaround. Suspect:
    `/opt/flarum/.composer/config.json` `credential.helper` config.
-3. **Fonts are loaded from Google Fonts CDN** via `@import` at the top of
+4. **Fonts are loaded from Google Fonts CDN** via `@import` at the top of
    `less/forum.less`. Self-host before main site rollout for privacy +
    reliability.
-4. **Bell hidden**. Notifications work but are only reachable via the
+5. **Bell hidden**. Notifications work but are only reachable via the
    `/notifications` URL. Either re-add a quiet bell or accept that
    notifications live in email only.
 
