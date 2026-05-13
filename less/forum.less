@@ -802,7 +802,59 @@ a {
   border-radius: 0;
   font-family: @pt-font-body;
 }
-.TextEditor-controls .Button { background: transparent; border-color: @pt-neutral-200; }
+
+// Toolbar formatting buttons (H, B, I, S, quote, code, link, image, lists)
+// — chromeless squares. The :not() exclusion is load-bearing: without it
+// the brand-blue Submit button below would also go transparent, making
+// it white-on-white text (the bug that prompted this rewrite).
+.TextEditor-controls .Button:not(.Button--primary) {
+  background: transparent;
+  border: 0;
+  color: @pt-neutral-500;
+
+  &:hover { color: @pt-neutral-900; background: @pt-neutral-50; }
+}
+
+// Submit button inside the composer. Flarum ships this as
+// `.Button.Button--primary` inside the .TextEditor-controls <ul>. The
+// global .Button--primary rule above paints it brand-blue, but the
+// composer-scoped controls override above tried to flatten EVERY button
+// — re-asserting the primary styling here keeps the label visible and
+// the cta loud.
+.TextEditor-controls .Button--primary,
+.Composer .Button--primary,
+.ComposerBody .Button--primary {
+  background: @pt-blue-500 !important;
+  color: #fff !important;
+  border: 1px solid @pt-blue-500 !important;
+  padding: 0.625rem 1.125rem !important;
+  min-width: 110px;
+
+  // The label can get hidden by Flarum's toolbar layout when there are
+  // many formatting buttons; force it to render.
+  .Button-label { display: inline !important; color: #fff !important; }
+
+  &:hover, &:focus {
+    background: @pt-blue-600 !important;
+    color: #fff !important;
+    border-color: @pt-blue-600 !important;
+  }
+}
+
+// Give the controls row some breathing room from the viewport bottom.
+// Without this padding the toolbar sits flush against the browser chrome
+// in fullscreen composer mode, which looks cramped on Macs where the
+// dock would normally cover the very edge.
+.TextEditor-controls {
+  padding: 0.75rem 1rem !important;
+  gap: 0.25rem;
+  border-top: 1px solid @pt-neutral-200;
+}
+
+// Composer body padding so text doesn't kiss the avatar/edge.
+.ComposerBody-content {
+  padding: 1rem 1.25rem;
+}
 
 // ─── Modals (login, signup, settings) ───────────────────────────────
 .Modal-content {
