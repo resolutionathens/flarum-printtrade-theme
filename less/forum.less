@@ -367,6 +367,24 @@ code, pre, kbd, samp, .code {
     display: none;
   }
 
+  // Hide the logo block entirely in the mobile drawer. Flarum's mobile
+  // chrome already shows the forum identity in the persistent top bar
+  // (above the slid-in drawer), so repeating the logo inside the
+  // drawer is just visual noise.
+  .App-header .Header-title {
+    display: none !important;
+  }
+
+  // Hide Login / Sign Up buttons everywhere on mobile. Auth is
+  // SSO-only — unauthenticated visitors get auto-redirected through
+  // theprinttrade.com via fof/oauth's third-party-login flow, so the
+  // stock Flarum Log In button is dead weight (and clicking it just
+  // shows a modal with a single SSO provider button anyway).
+  .App-header .item-logIn,
+  .App-header .item-signUp {
+    display: none !important;
+  }
+
   // The header's flex layout drops the justify-between since we're
   // really arranging: [hamburger] [logo] [avatar] across the top, and
   // the cross-nav is in the slid-in drawer below.
