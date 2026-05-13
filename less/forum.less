@@ -150,6 +150,37 @@ code, pre, kbd, samp, .code {
   display: none !important;
 }
 
+// Log In button (Header-secondary, unauthenticated state) — restyle to
+// match the cross-nav typography. Stock Flarum renders this as a
+// brand-blue link in sentence case ("Log In") with default Button--link
+// padding; we want it to read as "LOG IN" in the same 10px tracked-bold
+// uppercase as the rest of the right-side nav so the chrome stays
+// visually consistent for guest visitors.
+.App-header .item-logIn,
+.App-header .item-logIn .Button,
+.App-header .item-logIn button {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  color: @pt-neutral-500 !important;
+  font-family: @pt-font-label !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.15em !important;
+  text-transform: uppercase !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  text-decoration: none !important;
+  line-height: 1;
+  transition: color 150ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  &:hover, &:focus {
+    color: @pt-neutral-900 !important;
+    background: transparent !important;
+    text-decoration: none !important;
+  }
+}
+
 // Anchor cross-nav + avatar block to the right edge of the container.
 .App-header .Header-primary,
 .App-header #header-primary {
