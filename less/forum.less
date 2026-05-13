@@ -117,31 +117,39 @@ code, pre, kbd, samp, .code {
 
 // Cross-product nav items — injected by js/forum into HeaderPrimary.
 // Match the parent site's nav (10px uppercased+tracked label, gray default,
-// blue + underline when active).
-.pt-cross-nav-item, .item-pt-nav-0, .item-pt-nav-1, .item-pt-nav-2,
-.item-pt-nav-3, .item-pt-nav-4, .item-pt-nav-5 {
-  .Button, > a {
-    background: transparent !important;
-    box-shadow: none !important;
-    border: 0 !important;
-    color: @pt-neutral-500 !important;
-    font-family: @pt-font-label !important;
-    font-size: 10px !important;
-    font-weight: 700 !important;
-    letter-spacing: 0.15em !important;
-    text-transform: uppercase;
-    padding: 0.25rem 0.5rem !important;
-    text-decoration: none;
-
-    &:hover, &:focus {
-      color: @pt-neutral-900 !important;
-      background: transparent !important;
-      text-decoration: none;
-    }
-  }
+// blue + underline when active). Rules apply to the element directly (a
+// for inactive, span for active) AND to any .Button wrapper Flarum may
+// inject downstream, so the styling holds regardless of element shape.
+.pt-cross-nav-item,
+.pt-cross-nav-item .Button,
+.pt-cross-nav-item > a,
+.pt-cross-nav-item > span {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: 0 !important;
+  color: @pt-neutral-500 !important;
+  font-family: @pt-font-label !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.15em !important;
+  text-transform: uppercase !important;
+  padding: 0.25rem 0.5rem !important;
+  text-decoration: none !important;
+  display: inline-block;
+  line-height: 1.4;
 }
+.pt-cross-nav-item:hover,
+.pt-cross-nav-item:hover .Button,
+.pt-cross-nav-item:hover > a {
+  color: @pt-neutral-900 !important;
+  text-decoration: none !important;
+}
+
+// Active state — the current section. Blue text + 1px blue underline.
+.pt-cross-nav-item--active,
 .pt-cross-nav-item--active .Button,
-.pt-cross-nav-item--active > a {
+.pt-cross-nav-item--active > a,
+.pt-cross-nav-item--active > span {
   color: @pt-blue-500 !important;
   border-bottom: 1px solid @pt-blue-500 !important;
   border-radius: 0 !important;
