@@ -15,6 +15,7 @@
 import app from 'flarum/forum/app';
 import { extend } from 'flarum/common/extend';
 import HeaderPrimary from 'flarum/forum/components/HeaderPrimary';
+import LogInButton from 'flarum/forum/components/LogInButton';
 
 // NOTE: Flarum 1.x does NOT expose a HeaderTitle component — the
 // `<div class="Header-title">` is rendered inline inside App.view, so
@@ -111,5 +112,33 @@ app.initializers.add('theprinttrade-printtrade-theme', () => {
 
       items.add(`pt-nav-${i}`, node, 200 - i);
     });
+  });
+
+  // Override fof/oauth's LogInButton click handler to use a top-level
+  // navigation instead of window.open(). iOS Safari opens popups as
+  // new tabs where window.opener postMessage silently fails, breaking
+  // the OAuth handoff (Jake + Dow both got caught in this).
+  //
+  // fof/oauth registers its own extend() on LogInButton.initAttrs that
+  // sets attrs.onclick = popupOpener. Our theme is loaded LAST in the
+  // extensions_enabled order, so this extend() runs AFTER fof/oauth's
+  // and gets the final word on the onclick handler.
+  //
+  // Paired with the TopLevelResponseFactory override on the PHP side
+  // (see extend.php), the full flow becomes:
+  //   1. Click button → top-level navigate to /auth/generic
+  //   2. fof/oauth's controller redirects to theprinttrade.com OIDC
+  //   3. User authenticates, redirects back to /auth/generic?code=...
+  //   4. Our overridden ResponseFactory auto-creates the user (if
+  //      needed) and returns RedirectResponse('/') with the session
+  //      cookie attached
+  //   5. Browser follows redirect, user lands on / logged in
+  extend(LogInButton.prototype, 'initAttrs', function (this: any, attrs: any) {
+    if (!attrs.path) return;
+
+    attrs.onclick = function (e: MouseEvent) {
+      e.preventDefault();
+      window.location.assign(app.forum.attribute('baseUrl') + attrs.path);
+    };
   });
 });

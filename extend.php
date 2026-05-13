@@ -12,6 +12,7 @@
  */
 
 use Flarum\Extend;
+use ThePrintTrade\Theme\Provider\AuthOverrideProvider;
 
 return [
     (new Extend\Frontend('forum'))
@@ -23,4 +24,9 @@ return [
         ->js(__DIR__ . '/js/dist/admin.js'),
 
     new Extend\Locales(__DIR__ . '/resources/locale'),
+
+    // Bypass fof/oauth's SignUpModal + popup-completion HTML; auto-create
+    // SSO users server-side and return a top-level RedirectResponse so
+    // the flow works on iOS Safari. See TopLevelResponseFactory.
+    (new Extend\ServiceProvider())->register(AuthOverrideProvider::class),
 ];
