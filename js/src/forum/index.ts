@@ -15,7 +15,13 @@
 import app from 'flarum/forum/app';
 import { extend } from 'flarum/common/extend';
 import HeaderPrimary from 'flarum/forum/components/HeaderPrimary';
-import HeaderTitle from 'flarum/forum/components/HeaderTitle';
+
+// NOTE: Flarum 1.x does NOT expose a HeaderTitle component — the
+// `<div class="Header-title">` is rendered inline inside App.view, so
+// there's nothing to extend on the JS side. The wordmark next to the
+// logo is therefore styled via a CSS ::after pseudo-element in
+// less/forum.less. Don't try to import 'flarum/forum/components/HeaderTitle' —
+// the compat lookup returns undefined and throws at extend() time.
 
 // Mithril is exposed on the global as `m`.
 declare const m: any;
@@ -49,30 +55,6 @@ const CROSS_NAV: CrossNavLink[] = [
 app.initializers.add('theprinttrade-printtrade-theme', () => {
   // eslint-disable-next-line no-console
   console.log('[printtrade-theme] initializer registered');
-
-  // Inject a real <span class="Header-wordmark">The Print Trade</span>
-  // inside the .Header-title anchor, next to the .Header-logo img. This
-  // mirrors the parent site's markup exactly:
-  //
-  //   <a class="flex items-center gap-3">
-  //     <img class="h-8 sm:h-9 w-auto" src="/brand/icon-black.svg">
-  //     <span class="... text-base sm:text-lg ...">The Print Trade</span>
-  //   </a>
-  //
-  // An earlier iteration used a CSS ::after pseudo to avoid Mithril
-  // redraws clobbering injected DOM, but pseudo-elements render with
-  // subtly different metrics than real text (font hinting, kerning,
-  // baseline alignment) and they're not exposed to assistive tech the
-  // same way. Extending the component's view() rebuilds the vnode on
-  // every redraw so there's nothing to clobber.
-  extend(HeaderTitle.prototype, 'view', function (this: any, vnode: any) {
-    if (!vnode || !Array.isArray(vnode.children)) return;
-    const link = vnode.children.find((c: any) => c && typeof c === 'object' && c.tag);
-    if (!link || !Array.isArray(link.children)) return;
-    link.children.push(
-      m('span', { className: 'Header-wordmark', 'aria-hidden': 'true' }, 'The Print Trade')
-    );
-  });
 
   extend(HeaderPrimary.prototype, 'items', function (this: HeaderPrimary, items: any) {
     CROSS_NAV.forEach((link, i) => {

@@ -164,10 +164,11 @@ code, pre, kbd, samp, .code {
   display: block;
 }
 
-// Wordmark next to the logo. Injected as a real <span class="Header-wordmark">
-// by extending HeaderTitle.prototype.view in js/src/forum/index.ts so the
-// markup mirrors parent's exactly. Mithril owns it and re-renders it each
-// draw, so no risk of getting clobbered.
+// Wordmark next to the logo. Rendered as a CSS ::after pseudo on the
+// .Header-title link because Flarum 1.x has no HeaderTitle component to
+// extend — the `<div class="Header-title">` is rendered inline inside
+// App.view, so there's no per-component JS extension point. The pseudo
+// lives outside the vDOM so Mithril redraws can't clobber it.
 //
 // Parent markup (source of truth):
 //   <a class="flex items-center gap-3">
@@ -182,23 +183,24 @@ code, pre, kbd, samp, .code {
   align-items: center;
   gap: 0.75rem; // gap-3
   text-decoration: none !important;
+
+  &::after {
+    content: 'The Print Trade';
+    font-family: @pt-font-headline;
+    font-weight: 500;               // font-medium
+    font-size: 16px;                // text-base (mobile default)
+    text-transform: uppercase;
+    letter-spacing: 0.18em;         // tracking-[0.18em]
+    line-height: 1;                 // leading-none
+    color: @pt-neutral-900;
+    white-space: nowrap;
+  }
 }
 
-.Header-wordmark {
-  font-family: @pt-font-headline;
-  font-weight: 500;               // font-medium
-  font-size: 16px;                // text-base (mobile)
-  text-transform: uppercase;
-  letter-spacing: 0.18em;         // tracking-[0.18em]
-  line-height: 1;                 // leading-none
-  color: @pt-neutral-900;
-  white-space: nowrap;
-}
-
-// Parent bumps to text-lg at the sm breakpoint (640px+).
+// Parent bumps the wordmark to text-lg (18px) at the sm breakpoint (640px+).
 @media (min-width: 640px) {
-  .Header-wordmark {
-    font-size: 18px;              // sm:text-lg
+  .Header-title a::after {
+    font-size: 18px;                // sm:text-lg
   }
 }
 
