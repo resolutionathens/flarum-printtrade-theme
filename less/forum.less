@@ -1311,6 +1311,10 @@ body {
 .pt-footer { flex-shrink: 0; }
 
 // ─── User profile cards ─────────────────────────────────────────────
+//
+// Two contexts: the post-hover preview card AND the profile-page hero
+// (both UserCard). The preview-card rules below should NOT bleed into
+// the hero, so the hero-specific overrides live in .UserHero further down.
 .UserCard {
   background: #fff;
   border: 1px solid @pt-neutral-200;
@@ -1323,6 +1327,182 @@ body {
   font-family: @pt-font-headline;
   font-weight: 800;
   letter-spacing: -0.01em;
+}
+
+// ─── User profile hero — editorial pattern (matches .TagHero) ───────
+//
+// UserPage renders the profile as <UserCard className="Hero UserHero">.
+// Flarum's default look puts avatar+name on the left of a dimmed banner
+// tinted by the user's chosen color. We override into a centered hero
+// with a "MEMBER" eyebrow above the username, avatar stacked on top,
+// and a quiet "Online · Joined X" subtitle — same visual rhythm as the
+// tag landing pages so profile / tag / discussion all read as one
+// editorial system.
+//
+// Targets `.UserHero` (not just `.UserCard`) so the hover preview card
+// in post lists keeps its compact layout.
+.UserCard.UserHero {
+  // Force white background. .UserCard sets its bg from --usercard-bg
+  // (driven by user.color()); zero out the custom property AND set bg
+  // explicitly to override.
+  --usercard-bg: transparent !important;
+  background: #fff !important;
+  border: 0 !important;
+  border-bottom: 1px solid @pt-neutral-200 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  padding: 3rem 0 !important;
+  position: relative;
+
+  &:hover { border-color: @pt-neutral-200 !important; }
+
+  // .darkenBackground is Flarum's inner overlay (semi-transparent dark
+  // wash that gives the banner its depth on the default theme). Strip
+  // it for the flat editorial look.
+  .darkenBackground {
+    background: transparent !important;
+    padding: 0 !important;
+    color: @pt-neutral-900 !important;
+  }
+
+  .container {
+    max-width: 1152px;
+    text-align: center;
+    display: block !important;
+  }
+
+  // "MEMBER" eyebrow — mirrors .TagHero .container::before
+  .container::before {
+    content: 'Member';
+    display: block;
+    font-family: @pt-font-label;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: @pt-blue-500;
+    margin-bottom: 1.25rem;
+    line-height: 1;
+  }
+
+  // Stack avatar above username
+  .UserCard-profile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .UserCard-identity {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.25rem;
+    margin: 0;
+    text-shadow: none !important;
+
+    a {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.25rem;
+      color: @pt-neutral-900;
+      text-decoration: none;
+    }
+  }
+
+  // Avatar — circular, 88px, hairline ring matches the rest of the chrome
+  .UserCard-avatar,
+  .UserCard-avatar .Avatar,
+  .UserCard-avatar img,
+  .UserCard-avatar .Avatar img {
+    width: 88px !important;
+    height: 88px !important;
+    font-size: 36px !important;
+    line-height: 88px !important;
+    border-radius: 9999px !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+  }
+  .UserCard-avatar {
+    box-shadow: 0 0 0 1px @pt-neutral-200 !important;
+    border-radius: 9999px !important;
+    overflow: hidden;
+  }
+
+  // Username headline — large Epilogue 800, matches .TagHero-title
+  .username {
+    font-family: @pt-font-headline !important;
+    font-weight: 800 !important;
+    font-size: 40px !important;
+    letter-spacing: -0.025em !important;
+    line-height: 1.1 !important;
+    color: @pt-neutral-900 !important;
+    text-shadow: none !important;
+  }
+
+  // Badges — centered, quiet, just below the name
+  .UserCard-badges {
+    justify-content: center;
+    margin: 1rem 0 0 !important;
+    padding: 0;
+    display: flex;
+    gap: 0.5rem;
+  }
+  .UserCard-badges .Badge {
+    box-shadow: none !important;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+  }
+
+  // Info line — "Online · Joined 10 hours ago" — small gray subtitle
+  .UserCard-info {
+    justify-content: center;
+    margin-top: 0.75rem !important;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 1rem;
+    color: @pt-neutral-500 !important;
+    font-family: @pt-font-body;
+    font-size: 14px;
+    text-shadow: none !important;
+
+    li { color: @pt-neutral-500 !important; }
+  }
+
+  .UserCard-lastSeen.online { color: @pt-neutral-700 !important; }
+  .UserCard-lastSeen .fa-circle { color: #4ade80; }
+
+  // Kebab controls (top-right) — quiet down to match .Hero-close pattern
+  .UserCard-controls {
+    position: absolute !important;
+    top: 1rem;
+    right: 1rem;
+    margin: 0 !important;
+
+    > .Button {
+      background: transparent !important;
+      border: 0 !important;
+      color: @pt-neutral-400 !important;
+      &:hover { color: @pt-neutral-900 !important; background: transparent !important; }
+    }
+  }
+}
+
+// Mobile — tighten the hero
+@media (max-width: 639px) {
+  .UserCard.UserHero {
+    padding: 2rem 0 !important;
+    .username { font-size: 28px !important; }
+    .UserCard-avatar,
+    .UserCard-avatar .Avatar,
+    .UserCard-avatar img {
+      width: 72px !important;
+      height: 72px !important;
+      line-height: 72px !important;
+      font-size: 28px !important;
+    }
+  }
 }
 
 // ─── SSO login button polish (the brand-blue "theprinttrade.com" CTA) ──
