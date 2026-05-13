@@ -1,0 +1,13 @@
+# Locale overrides for The Print Trade forum.
+#
+# fof/oauth + blt950/oauth-generic render the provider button label
+# from the translation key fof-oauth.lib.providers.<provider-name>.
+# blt950's name() returns "generic", so the default label is literally
+# "Generic". We override it here so the button reads
+# "Log In with theprinttrade.com" without having to patch the vendor
+# YAML inside the container (which doesn't survive image rebuilds).
+
+fof-oauth:
+  lib:
+    providers:
+      generic: theprinttrade.com

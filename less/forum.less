@@ -1,0 +1,499 @@
+// ──────────────────────────────────────────────────────────────────────
+// The Print Trade — forum styles
+//
+// Mirrors the parent site (theprinttrade.com): paper-white chrome,
+// hairline borders, 0px corners, Epilogue/Manrope/Inconsolata
+// typography, brand blue (#1941ff) accents, eyebrow labels for meta.
+//
+// LESS variable overrides (e.g. @body-bg, @border-radius) sit at the
+// top so Flarum's downstream component LESS picks them up. Component-
+// level overrides come after with selector + value resets — Flarum's
+// component LESS has reasonable specificity so we can avoid !important
+// in most places; exceptions are flagged inline.
+// ──────────────────────────────────────────────────────────────────────
+
+@import url('https://fonts.googleapis.com/css2?family=Epilogue:wght@500;600;700;800;900&family=Manrope:wght@400;500;600;700&family=Inconsolata:wght@400;600&display=swap');
+
+// ─── Brand tokens (cribbed from theprinttrade.com main.css) ──────────
+@pt-blue-50:   #eef2ff;
+@pt-blue-100:  #dce4ff;
+@pt-blue-300:  #8aa4ff;
+@pt-blue-500:  #1941ff;
+@pt-blue-600:  #1235d9;
+@pt-blue-700:  #0e2ab3;
+@pt-blue-900:  #071566;
+@pt-blue-950:  #040d40;
+
+@pt-neutral-50:   #fafafa;
+@pt-neutral-100:  #f5f5f5;
+@pt-neutral-200:  #e5e5e5;
+@pt-neutral-300:  #d4d4d4;
+@pt-neutral-400:  #a3a3a3;
+@pt-neutral-500:  #737373;
+@pt-neutral-600:  #525252;
+@pt-neutral-700:  #404040;
+@pt-neutral-800:  #262626;
+@pt-neutral-900:  #171717;
+@pt-neutral-950:  #0a0a0a;
+
+@pt-font-headline: 'Epilogue', ui-sans-serif, system-ui, -apple-system, sans-serif;
+@pt-font-body:     'Manrope',  ui-sans-serif, system-ui, -apple-system, sans-serif;
+@pt-font-label:    'Manrope',  ui-sans-serif, system-ui, -apple-system, sans-serif;
+@pt-font-mono:     'Inconsolata', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+
+// ─── Override Flarum's global LESS vars ─────────────────────────────
+@font-family:         @pt-font-body;
+@heading-font-family: @pt-font-headline;
+@code-font-family:    @pt-font-mono;
+@border-radius:       0;
+
+// ─── Global ─────────────────────────────────────────────────────────
+body, .App {
+  font-family: @pt-font-body;
+  color: @pt-neutral-900;
+  background: #fff;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: @pt-font-headline;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: @pt-neutral-900;
+}
+
+code, pre, kbd, samp, .code {
+  font-family: @pt-font-mono;
+}
+
+// ─── Header (paper-white with black hairline, NOT colored) ──────────
+//
+// We force this even when admin sets theme_colored_header=1, because
+// the parent site has a paper-white header and brand consistency wins.
+.App-header {
+  background: #fff !important;
+  color: @pt-neutral-900 !important;
+  box-shadow: none !important;
+  border-bottom: 1px solid @pt-neutral-900;
+}
+
+.Header-title, .Header-title a {
+  font-family: @pt-font-headline;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 14px;
+  color: @pt-neutral-900 !important;
+}
+
+.Header-logo {
+  // Wordmark SVG comes in white — invert it to black for the paper header.
+  // We use a CSS filter rather than swapping image src so admin can still
+  // upload a new logo via the upload button.
+  height: 28px;
+  width: auto;
+  filter: brightness(0); // SVG → pure black, regardless of source color
+}
+
+// Header search + buttons
+.Header-controls > .item > .Button,
+.Header-controls > .item > .Dropdown > .Button,
+.SessionDropdown {
+  color: @pt-neutral-600 !important;
+  background: transparent !important;
+  font-family: @pt-font-label;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+.Header-controls > .item > .Button:hover,
+.Header-controls > .item > .Dropdown > .Button:hover {
+  color: @pt-neutral-900 !important;
+}
+
+// ─── Search input ───────────────────────────────────────────────────
+.Search-input,
+.IndexPage-toolbar .Search-input,
+.FormControl {
+  background: #fff;
+  border: 1px solid @pt-neutral-200;
+  border-radius: 0;
+  font-family: @pt-font-body;
+  font-size: 14px;
+  color: @pt-neutral-900;
+  box-shadow: none;
+
+  &:focus, &.focus {
+    border-color: @pt-neutral-900;
+    outline: none;
+    box-shadow: none;
+  }
+  &::placeholder { color: @pt-neutral-400; }
+}
+
+// ─── Buttons ────────────────────────────────────────────────────────
+.Button {
+  border-radius: 0;
+  font-family: @pt-font-label;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.625rem 1.125rem;
+  line-height: 1;
+  box-shadow: none;
+  border: 1px solid transparent;
+  transition: background 150ms cubic-bezier(0.4, 0, 0.2, 1),
+              color 150ms cubic-bezier(0.4, 0, 0.2, 1),
+              border-color 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.Button--primary {
+  background: @pt-blue-500;
+  color: #fff;
+  border-color: @pt-blue-500;
+
+  &:hover, &:focus, &:active {
+    background: @pt-blue-600;
+    color: #fff;
+    border-color: @pt-blue-600;
+    box-shadow: none;
+  }
+}
+
+.Button:not(.Button--primary):not(.Button--link):not(.Button--icon) {
+  background: #fff;
+  color: @pt-neutral-900;
+  border-color: @pt-neutral-200;
+
+  &:hover, &:focus {
+    border-color: @pt-neutral-900;
+    background: #fff;
+    color: @pt-neutral-900;
+  }
+}
+
+.Button--link {
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: none;
+  font-size: 13px;
+  padding: 0.25rem 0.5rem;
+}
+
+// Small icon-only buttons (filters etc.) — keep them quiet
+.Button--icon {
+  background: transparent;
+  border-color: transparent;
+}
+
+// ─── Avatars ────────────────────────────────────────────────────────
+//
+// PT design system uses sharp rectangles. Pure 0px feels too harsh for
+// faces, so we land on 2px — still visibly square.
+.Avatar {
+  border-radius: 2px;
+  box-shadow: none;
+  font-family: @pt-font-headline;
+  font-weight: 700;
+}
+
+// ─── Links + accents ────────────────────────────────────────────────
+a {
+  color: @pt-blue-500;
+  text-decoration: none;
+  &:hover { color: @pt-blue-600; text-decoration: underline; }
+}
+
+// ─── Eyebrow / label helpers (matches main.css .eyebrow / .label) ───
+.pt-eyebrow {
+  font-family: @pt-font-label;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: @pt-neutral-400;
+  line-height: 1;
+}
+.pt-label {
+  font-family: @pt-font-label;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: @pt-neutral-400;
+}
+.pt-dot {
+  width: 3px;
+  height: 3px;
+  background: currentColor;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+  margin: 0 0.375rem;
+  opacity: 0.6;
+}
+
+// ─── Index page (discussion list) — editorial chrome ────────────────
+.IndexPage-nav {
+  background: transparent;
+}
+
+.IndexPage-toolbar {
+  border-bottom: 1px solid @pt-neutral-200;
+  padding-bottom: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.IndexPage-toolbar .Search-input { font-size: 13px; }
+
+// Sidebar nav items: pt-label feel
+.IndexPage-nav .item-nav .NavItem,
+.IndexPage-nav .item-nav .Dropdown-toggle {
+  font-family: @pt-font-label;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: @pt-neutral-500;
+  border-radius: 0;
+  padding: 0.5rem 0.75rem;
+  &:hover { color: @pt-neutral-900; background: @pt-neutral-50; }
+  &.active {
+    color: @pt-blue-500;
+    background: transparent;
+    border-left: 2px solid @pt-blue-500;
+    padding-left: calc(0.75rem - 2px);
+  }
+}
+
+// Discussion list row
+.DiscussionListItem {
+  padding: 18px 0;
+  border-bottom: 1px solid @pt-neutral-200;
+  background: transparent;
+  transition: background 150ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  &:hover { background: @pt-neutral-50; }
+  &.active { background: transparent; }
+}
+
+.DiscussionListItem-title {
+  font-family: @pt-font-headline;
+  font-weight: 700;
+  font-size: 17px;
+  letter-spacing: -0.01em;
+  color: @pt-neutral-900;
+  margin-bottom: 4px;
+}
+
+.DiscussionListItem-info,
+.DiscussionListItem-info .username,
+.DiscussionListItem-info time,
+.DiscussionListItem-info .item-terminalPost {
+  font-family: @pt-font-body;
+  font-size: 12px;
+  color: @pt-neutral-500;
+  letter-spacing: 0.01em;
+}
+
+.DiscussionListItem-count {
+  font-family: @pt-font-headline;
+  font-weight: 800;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  color: @pt-neutral-400;
+  background: @pt-neutral-100;
+  border-radius: 0;
+  padding: 4px 8px;
+  letter-spacing: -0.02em;
+
+  &.new { color: #fff; background: @pt-blue-500; }
+}
+
+// Empty / loading states
+.DiscussionList-loadMore .Button,
+.DiscussionList-empty {
+  font-family: @pt-font-label;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: @pt-neutral-400;
+}
+
+// ─── Discussion (thread) page ───────────────────────────────────────
+.DiscussionPage-discussion .DiscussionHero {
+  background: #fff;
+  color: @pt-neutral-900;
+  padding: 32px 0 16px;
+  border-bottom: 1px solid @pt-neutral-200;
+  margin-bottom: 16px;
+}
+
+.DiscussionHero-title {
+  font-family: @pt-font-headline;
+  font-weight: 900;
+  font-size: 32px;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+  color: @pt-neutral-900;
+  text-shadow: none;
+}
+
+.PostStream-item, .CommentPost {
+  border-radius: 0;
+}
+
+.CommentPost-header .username {
+  font-family: @pt-font-headline;
+  font-weight: 700;
+  font-size: 14px;
+  color: @pt-neutral-900;
+}
+
+.Post-body {
+  font-family: @pt-font-body;
+  font-size: 15px;
+  line-height: 1.65;
+  color: @pt-neutral-800;
+
+  p, ul, ol, blockquote, pre { margin-bottom: 0.875rem; }
+
+  blockquote {
+    border-left: 2px solid @pt-blue-500;
+    padding-left: 1rem;
+    color: @pt-neutral-600;
+    font-style: normal;
+  }
+
+  code {
+    background: @pt-neutral-100;
+    padding: 0.125rem 0.375rem;
+    border-radius: 0;
+    font-size: 0.875em;
+  }
+
+  pre, .CodeMirror, .hljs {
+    background: @pt-neutral-50;
+    border: 1px solid @pt-neutral-200;
+    border-radius: 0;
+    padding: 1rem;
+  }
+}
+
+.PostStream-item + .PostStream-item {
+  border-top: 1px solid @pt-neutral-200;
+}
+
+// Reply composer / TextEditor
+.Composer {
+  background: #fff;
+  border-top: 1px solid @pt-neutral-900;
+  box-shadow: none;
+  border-radius: 0;
+}
+.Composer-content,
+.TextEditor,
+.TextEditor-editor {
+  background: #fff;
+  color: @pt-neutral-900;
+  border-radius: 0;
+  font-family: @pt-font-body;
+}
+.TextEditor-controls .Button { background: transparent; border-color: @pt-neutral-200; }
+
+// ─── Modals (login, signup, settings) ───────────────────────────────
+.Modal-content {
+  border-radius: 0;
+  border: 1px solid @pt-neutral-900;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.12);
+}
+.Modal-header {
+  border-bottom: 1px solid @pt-neutral-200;
+  font-family: @pt-font-headline;
+  font-weight: 800;
+}
+
+// ─── Dropdowns ──────────────────────────────────────────────────────
+.Dropdown-menu {
+  border-radius: 0;
+  border: 1px solid @pt-neutral-200;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  padding: 4px 0;
+
+  > li > a, > li > button {
+    font-family: @pt-font-body;
+    font-size: 13px;
+    padding: 0.5rem 0.875rem;
+
+    &:hover { background: @pt-neutral-50; color: @pt-neutral-900; }
+  }
+}
+
+// ─── Notifications panel ────────────────────────────────────────────
+.NotificationGrid, .NotificationList {
+  .Notification {
+    border-bottom: 1px solid @pt-neutral-200;
+    border-radius: 0;
+  }
+}
+
+// ─── Footer (Flarum default is sparse — keep it quiet) ──────────────
+.App-footer {
+  border-top: 1px solid @pt-neutral-200;
+  background: transparent;
+  padding: 2rem 0;
+  text-align: center;
+  font-family: @pt-font-label;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: @pt-neutral-400;
+}
+
+// ─── User profile cards ─────────────────────────────────────────────
+.UserCard {
+  background: #fff;
+  border: 1px solid @pt-neutral-200;
+  border-radius: 0;
+  box-shadow: none;
+  transition: border-color 150ms;
+  &:hover { border-color: @pt-neutral-900; }
+}
+.UserCard-info .username {
+  font-family: @pt-font-headline;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+// ─── SSO login button polish (the brand-blue "theprinttrade.com" CTA) ──
+//
+// fof/oauth renders a stack of provider buttons in the LogInModal /
+// SignUpModal. With third-party-login-only enabled this is the ONLY
+// way in, so the button deserves to read as the primary action.
+.LogInModal, .SignUpModal {
+  .Form-group .Button.LogInButton {
+    background: @pt-blue-500;
+    color: #fff;
+    border-color: @pt-blue-500;
+    font-family: @pt-font-label;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 13px;
+    width: 100%;
+    padding: 0.875rem 1.25rem;
+
+    .icon, .fas, .fa { color: #fff; margin-right: 0.5rem; }
+
+    &:hover, &:focus { background: @pt-blue-600; border-color: @pt-blue-600; color: #fff; }
+  }
+}
+
+// Scrollbar polish (chromium-only)
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: @pt-neutral-200; border-radius: 0; }
+::-webkit-scrollbar-thumb:hover { background: @pt-neutral-400; }

@@ -1,0 +1,36 @@
+{
+    "name": "theprinttrade/flarum-printtrade-theme",
+    "description": "Flarum theme + SSO polish for the The Print Trade community forum.",
+    "type": "flarum-extension",
+    "license": "MIT",
+    "require": {
+        "flarum/core": "^1.8.0",
+        "fof/oauth": "^2.0",
+        "blt950/oauth-generic": "*"
+    },
+    "authors": [
+        {
+            "name": "Ian Kennedy",
+            "email": "exposure@gmail.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "ThePrintTrade\\Theme\\": "src/"
+        }
+    },
+    "extra": {
+        "flarum-extension": {
+            "title": "The Print Trade Theme",
+            "category": "theme",
+            "icon": {
+                "name": "fas fa-palette",
+                "backgroundColor": "#040d40",
+                "color": "#fff"
+            }
+        },
+        "flarum-locale": {}
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

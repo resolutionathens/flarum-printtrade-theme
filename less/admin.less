@@ -1,0 +1,28 @@
+// Admin panel — lightly themed. The admin UX is more form-density than
+// content-density so we only adjust typography + radius, not chrome.
+
+@import url('https://fonts.googleapis.com/css2?family=Epilogue:wght@500;600;700;800;900&family=Manrope:wght@400;500;600;700&display=swap');
+
+@pt-blue-500:    #1941ff;
+@pt-blue-600:    #1235d9;
+@pt-neutral-200: #e5e5e5;
+@pt-neutral-900: #171717;
+@pt-font-body:   'Manrope',  ui-sans-serif, system-ui, -apple-system, sans-serif;
+@pt-font-head:   'Epilogue', ui-sans-serif, system-ui, -apple-system, sans-serif;
+
+@font-family:         @pt-font-body;
+@heading-font-family: @pt-font-head;
+@border-radius:       2px;
+
+body, .App {
+  font-family: @pt-font-body;
+}
+h1, h2, h3, h4, h5, h6 { font-family: @pt-font-head; letter-spacing: -0.01em; }
+
+.Button--primary {
+  background: @pt-blue-500;
+  border-color: @pt-blue-500;
+  &:hover { background: @pt-blue-600; border-color: @pt-blue-600; }
+}
+
+.FormControl, .Button { border-radius: 2px; }
