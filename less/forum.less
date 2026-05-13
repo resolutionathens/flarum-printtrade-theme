@@ -904,6 +904,123 @@ a {
   color: @pt-neutral-400;
 }
 
+// ─── Page heros — match parent's editorial section pattern ──────────
+//
+// Flarum's IndexPage WelcomeHero + TagHero both render with the theme
+// primary color tinted as a banner background. With our brand blue
+// (#1941ff) at low alpha that reads as lavender, which clashes with
+// the otherwise white editorial chrome. Parent uses tight eyebrow
+// labels + large Epilogue 800 headings on plain white for its section
+// heads — mirror that pattern.
+.Hero,
+.WelcomeHero,
+.TagHero {
+  background: #fff !important;
+  background-image: none !important;
+  color: @pt-neutral-900 !important;
+  border-bottom: 1px solid @pt-neutral-200;
+  text-shadow: none !important;
+  padding: 3rem 0 !important;
+  position: relative;
+
+  .container {
+    max-width: 1152px;
+    text-align: center;
+  }
+}
+
+.Hero-title,
+.WelcomeHero-title,
+.TagHero-title {
+  font-family: @pt-font-headline !important;
+  font-weight: 800 !important;
+  font-size: 32px !important;
+  letter-spacing: -0.025em !important;
+  line-height: 1.15 !important;
+  color: @pt-neutral-900 !important;
+  text-shadow: none !important;
+  margin: 0;
+}
+
+.Hero-subtitle,
+.WelcomeHero-subtitle,
+.TagHero-subtitle {
+  font-family: @pt-font-body !important;
+  font-size: 14px !important;
+  color: @pt-neutral-500 !important;
+  text-shadow: none !important;
+  margin-top: 0.5rem !important;
+  max-width: 36rem;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 1.5;
+}
+
+// Tag landing-page eyebrow — "TAG" label above the tag name to match
+// parent's `<div class="eyebrow eyebrow--accent">` pattern that sits
+// above section H1s on /rules, /directory, etc.
+.TagHero .container::before {
+  content: 'Tag';
+  display: block;
+  font-family: @pt-font-label;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: @pt-blue-500;
+  margin-bottom: 1rem;
+  line-height: 1;
+}
+
+// Close-out button (the X in the top-right of WelcomeHero) — keep but
+// quiet it down so it doesn't compete with the headline.
+.Hero-close .Button,
+.WelcomeHero-close .Button {
+  color: @pt-neutral-400 !important;
+  background: transparent !important;
+  border: 0 !important;
+  &:hover { color: @pt-neutral-900 !important; }
+}
+
+// ─── Sidebar tag list — neutralize the color squares ───────────────
+//
+// Flarum's .TagLabel renders a colored square per tag; when no color
+// is set on the tag (which is our case — all 6 primary tags have null
+// color by design), it falls back to a tinted version of the theme's
+// primary, producing the same lavender we just exorcised from the
+// hero. Force a neutral square so the sidebar reads as quiet labels
+// rather than as a coloring book.
+.NavItem .TagLabel,
+.IndexPage-nav .TagLabel,
+.TagsPage .TagTile .TagTile-info,
+.DiscussionListItem .TagLabel,
+.tagLabels .TagLabel {
+  background: @pt-neutral-100 !important;
+  color: @pt-neutral-500 !important;
+}
+
+// Active tag in the sidebar — the brand-blue left-border accent we use
+// on other active sidebar items reads more clearly than coloring the
+// square itself.
+.IndexPage-nav .NavItem.active .TagLabel {
+  background: @pt-blue-50 !important;
+  color: @pt-blue-700 !important;
+}
+
+// Empty-state copy — turn the stock plain-text into an eyebrow label
+// so it reads as a deliberate moment rather than an error.
+.DiscussionList-empty,
+.IndexPage-results .EndOfDiscussionList {
+  font-family: @pt-font-label !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.18em !important;
+  text-transform: uppercase !important;
+  color: @pt-neutral-400 !important;
+  text-align: center;
+  padding: 4rem 0 !important;
+}
+
 // ─── Discussion (thread) page ───────────────────────────────────────
 .DiscussionPage-discussion .DiscussionHero {
   background: #fff;
