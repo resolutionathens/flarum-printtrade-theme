@@ -562,18 +562,21 @@ code, pre, kbd, samp, .code {
   }
 
   // Active item indicator on mobile: a 3px brand-blue left bar with a
-  // proper gap before the label. The previous `padding-left: calc(1rem
-  // - 2px)` left the F of FORUM sitting only 14px from the bar, which
-  // visually read as cramped. Bumping to 1.5rem (24px) gives the
-  // indicator real breathing room and emphasises the active state
-  // through both color AND a small text indent — both common cues for
-  // "you are here" in side menus.
+  // proper gap before the label.
+  //
+  // Use a literal pixel value rather than `calc(1.5rem - 3px)` —
+  // LESS's preprocessor tries to evaluate the math at compile time and
+  // misparsed our expression, emitting `calc(-1.5rem)` in the compiled
+  // CSS. The negative padding pulled FORUM *left* by 24px, putting the
+  // text right against the indicator bar — the opposite of intended.
+  // Escaping with `~"calc(...)"` would also work, but a literal 21px
+  // is clearer.
   .pt-cross-nav-item--active,
   .pt-cross-nav-item--active > a,
   .pt-cross-nav-item--active > span {
     border-bottom-color: @pt-neutral-100 !important;
     border-left: 3px solid @pt-blue-500 !important;
-    padding-left: calc(1.5rem - 3px) !important;
+    padding-left: 21px !important;   // 24px total visual indent (3px bar + 21px gap)
   }
 }
 
