@@ -184,8 +184,24 @@ code, pre, kbd, samp, .code {
   gap: 0.75rem; // gap-3
   text-decoration: none !important;
 
+  // Forum wordmark — "The Darkroom" instead of "The Print Trade".
+  //
+  // Intentional brand split: the parent site (theprinttrade.com) carries
+  // the umbrella wordmark "THE PRINT TRADE"; the forum is named THE
+  // DARKROOM as a sub-brand evocative of the back room where the craft
+  // happens. This both:
+  //   1. Signals "you're in the community section" without needing an
+  //      active-state border under a nav item
+  //   2. Sidesteps the visual mismatch between Flarum's stock logo
+  //      rendering and the parent's exact wordmark span (we can't get
+  //      pseudo-element metrics to match Tailwind exactly)
+  //
+  // If renaming the Flarum forum_title (via admin → Basics) the browser
+  // <title> will follow, but this wordmark is intentionally independent
+  // of that setting — Flarum's title can stay "The Print Trade Forum"
+  // for SEO while the visible brand reads as THE DARKROOM.
   &::after {
-    content: 'The Print Trade';
+    content: 'The Darkroom';
     font-family: @pt-font-headline;
     font-weight: 500;               // font-medium
     font-size: 16px;                // text-base (mobile default)
