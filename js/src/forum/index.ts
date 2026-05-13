@@ -15,7 +15,9 @@
 import app from 'flarum/forum/app';
 import { extend } from 'flarum/common/extend';
 import HeaderPrimary from 'flarum/forum/components/HeaderPrimary';
+import IndexPage from 'flarum/forum/components/IndexPage';
 import LogInButton from 'flarum/forum/components/LogInButton';
+import Button from 'flarum/common/components/Button';
 
 // NOTE: Flarum 1.x does NOT expose a HeaderTitle component — the
 // `<div class="Header-title">` is rendered inline inside App.view, so
@@ -140,5 +142,40 @@ app.initializers.add('theprinttrade-printtrade-theme', () => {
       e.preventDefault();
       window.location.assign(app.forum.attribute('baseUrl') + attrs.path);
     };
+  });
+
+  // Members-only forum: there are no "guests" in the social sense — anyone
+  // landing here unauthenticated either belongs (and just needs to log in)
+  // or got the URL by mistake. The stock IndexPage shows a compose icon
+  // ("Start a Discussion") in the mobile top-right slot, which for a
+  // signed-out visitor is a confusing dead-end — clicking it opens a
+  // login modal but the icon itself gives no hint that auth is required.
+  //
+  // For guests, swap that button for a "Log In" CTA that uses the same
+  // App-primaryControl mobile slot. Clicking it does a top-level redirect
+  // to /auth/generic — same path used by our LogInButton override above,
+  // so iOS Safari works (no popup) and the user lands back on the forum
+  // logged in via the TopLevelResponseFactory flow.
+  //
+  // Desktop also benefits: the left-rail "Start a Discussion" primary
+  // button becomes "Log In" with a sign-in icon, which is a clearer
+  // affordance for an authenticated forum.
+  extend(IndexPage.prototype, 'sidebarItems', function (this: IndexPage, items: any) {
+    if (app.session.user) return;
+
+    const loginButton = Button.component(
+      {
+        icon: 'fas fa-sign-in-alt',
+        className: 'Button Button--primary IndexPage-newDiscussion',
+        itemClassName: 'App-primaryControl',
+        onclick: (e: MouseEvent) => {
+          e.preventDefault();
+          window.location.assign(app.forum.attribute('baseUrl') + '/auth/generic');
+        },
+      },
+      app.translator.trans('core.forum.header.log_in_link')
+    );
+
+    items.replace('newDiscussion', loginButton);
   });
 });
