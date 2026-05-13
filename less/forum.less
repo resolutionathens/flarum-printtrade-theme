@@ -123,20 +123,30 @@ code, pre, kbd, samp, .code {
 
 // Header-secondary stays visible but only as the SessionDropdown avatar —
 // search and bell are hidden (search lives in IndexPage toolbar; bell only
-// reachable via /notifications for now). The avatar dropdown is the only
-// path to forum-side actions (Forum Profile, Settings, Logout) since the
-// cross-nav "Profile" link routes to the PARENT profile, not the forum
-// profile. Without this, there's no UI affordance to reach /u/<username>.
+// reachable via /notifications URL for now). The avatar dropdown is the
+// only path to forum-side actions (Forum Profile, Settings, Logout)
+// since the cross-nav "Profile" link routes to the PARENT profile, not
+// the forum profile. Without this, there's no UI affordance to /u/<username>.
 .App-header .Header-secondary {
   margin-left: 0.75rem !important;
   display: flex !important;
   align-items: center !important;
 }
 
-// Hide everything in Header-secondary except the SessionDropdown.
-// Stock items in Header-secondary: search, notifications, sessionDropdown.
-.App-header .Header-secondary > .item-search,
-.App-header .Header-secondary > .item-notifications {
+// Hide notifications + search across the whole app (header AND mobile
+// drawer). The earlier `.Header-secondary > .item-notifications` selector
+// was a no-op because `.item-notifications` is nested one level deeper
+// (inside `.Header-controls > ul`), not a direct child of `.Header-
+// secondary` — flatten the selector so it actually catches the <li>.
+//
+// Bell is hidden by design per current scope: notifications still work,
+// but are reached via the /notifications URL rather than a header pill.
+.item-notifications,
+.NotificationsDropdown {
+  display: none !important;
+}
+.Header-controls .item-search,
+.App-header .item-search {
   display: none !important;
 }
 
@@ -385,13 +395,37 @@ code, pre, kbd, samp, .code {
     display: none !important;
   }
 
-  // The header's flex layout drops the justify-between since we're
-  // really arranging: [hamburger] [logo] [avatar] across the top, and
-  // the cross-nav is in the slid-in drawer below.
+  // Stack the drawer's sections vertically. The .App-header on mobile
+  // becomes the slid-in drawer body, so its container needs to flow
+  // top-to-bottom: [avatar block] then [cross-nav stack]. Without
+  // flex-direction: column the cross-nav (full-width <ul>) and the
+  // SessionDropdown end up side-by-side and the avatar gets pinned to
+  // the far right of the drawer instead of sitting above the nav.
   .App-header .container,
   .App-header-primary .container {
+    flex-direction: column !important;
+    align-items: stretch !important;
     justify-content: flex-start !important;
-    gap: 0.75rem;
+    gap: 0 !important;
+    padding: 0 !important;
+  }
+
+  // Avatar block sits above the cross-nav in the drawer. Visually
+  // matches the convention of putting the current-user affordance at
+  // the top of side menus (Twitter, Mastodon, etc.) so it's the first
+  // thing a user reaches when they open the drawer.
+  .App-header .Header-secondary {
+    order: -1;
+    margin: 0 !important;
+    padding: 1rem !important;
+    width: 100%;
+    border-bottom: 1px solid @pt-neutral-200;
+    justify-content: flex-end;     // right-align the avatar within the row
+  }
+
+  .App-header .Header-secondary .Header-controls {
+    justify-content: flex-end;
+    width: auto;
   }
 
   // Cross-nav becomes a vertical stack inside the drawer. The drawer
