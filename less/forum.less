@@ -93,13 +93,38 @@ code, pre, kbd, samp, .code {
   z-index: 50;
 }
 
+// The container becomes a flex row with the SAME layout as parent:
+//   [logo+wordmark]                                           [nav links]
+// using justify-content: space-between to anchor logo left and nav right.
+// Flarum's stock template puts three sections in here (Header-title,
+// Header-primary, Header-secondary). We force flex on the container and
+// hide Header-secondary entirely (search/bell/user pill all live in the
+// Sign Out / Profile nav links and direct URLs for settings/admin).
 .App-header .container,
 .App-header-primary .container {
   max-width: 1152px !important; // max-w-6xl
   padding-left: 1.5rem !important;
   padding-right: 1.5rem !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
   flex-wrap: nowrap !important;
   min-width: 0;
+}
+
+// Hide Header-secondary (search, notifications, user pill) entirely.
+// All necessary actions are in the cross-nav (Sign Out, Profile).
+// Forum-specific settings/admin/notifications reachable via direct URL:
+//   /settings, /admin, /notifications
+.App-header .Header-secondary,
+.App-header #header-secondary {
+  display: none !important;
+}
+
+// Anchor cross-nav to the right edge of the container.
+.App-header .Header-primary,
+.App-header #header-primary {
+  margin-left: auto !important;
 }
 
 // Logo block: <a><img class="Header-logo"/> + ::after wordmark</a>
