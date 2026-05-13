@@ -347,20 +347,75 @@ code, pre, kbd, samp, .code {
   min-width: 0;
 }
 
-// Responsive breakpoint — matches the parent site's `hidden md:flex`.
-// Below 768px the cross-nav collapses entirely and only the avatar
-// dropdown remains visible on the right side. Flarum's stock hamburger
-// drawer (.Drawer-toggle button rendered by App.js) is the way back to
-// the discussion list / sidebar nav at narrow widths.
+// Responsive breakpoint — matches the parent site's `hidden md:flex`
+// (but with a critical mobile-drawer caveat).
+//
+// In Flarum 1.x, the mobile drawer IS the same `.App-header` element
+// translated off-screen and slid in on hamburger tap. There is NO
+// separate drawer component or drawer items ItemList — `.Header-primary`
+// and `.Header-secondary` literally become the drawer's content via CSS
+// transform. So we cannot `display: none` `.Header-primary` on mobile
+// without erasing the cross-nav from the drawer too.
+//
+// Instead: keep `.Header-primary` visible at all widths, but restyle
+// the `.Header-controls` ul as a vertical stacked menu on mobile so it
+// reads as a proper drawer nav (not a wrapping horizontal row).
 @media (max-width: 767px) {
-  .App-header .Header-primary,
-  .App-header #header-primary {
-    display: none !important;
-  }
-
-  // Wordmark hides too — the icon alone identifies us on mobile.
+  // Wordmark hides on mobile — the icon alone identifies us in the
+  // collapsed header chrome.
   .Header-title a::after {
     display: none;
+  }
+
+  // The header's flex layout drops the justify-between since we're
+  // really arranging: [hamburger] [logo] [avatar] across the top, and
+  // the cross-nav is in the slid-in drawer below.
+  .App-header .container,
+  .App-header-primary .container {
+    justify-content: flex-start !important;
+    gap: 0.75rem;
+  }
+
+  // Cross-nav becomes a vertical stack inside the drawer. The drawer
+  // is the same .Header-primary that's positioned absolutely on mobile
+  // by Flarum's stock CSS; we just need to make its contents look like
+  // a proper menu list rather than a horizontal nav row.
+  .App-header .Header-primary {
+    margin-left: 0 !important;
+    width: 100%;
+  }
+
+  .App-header .Header-primary .Header-controls {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0 !important;
+    padding: 0.5rem 0 !important;
+    width: 100%;
+  }
+
+  // Each cross-nav item: full-width tap target with comfortable
+  // padding. Mobile drawer items want to be easy to tap, not the
+  // 10px-tracked-uppercase mini text we use on desktop.
+  .pt-cross-nav-item,
+  .pt-cross-nav-item > a,
+  .pt-cross-nav-item > span {
+    display: block !important;
+    width: 100%;
+    padding: 0.875rem 1rem !important;
+    font-size: 12px !important;
+    line-height: 1.2 !important;
+    border-bottom: 1px solid @pt-neutral-100 !important;
+  }
+
+  // Active item underline doesn't make sense in a vertical list — use
+  // a left-border accent instead, matching how IndexPage-nav active
+  // items work.
+  .pt-cross-nav-item--active,
+  .pt-cross-nav-item--active > a,
+  .pt-cross-nav-item--active > span {
+    border-bottom-color: @pt-neutral-100 !important;
+    border-left: 2px solid @pt-blue-500 !important;
+    padding-left: calc(1rem - 2px) !important;
   }
 }
 
