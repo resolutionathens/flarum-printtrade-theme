@@ -54,6 +54,55 @@
 @header-height:       76px;
 @header-height-phone: 60px;
 
+// ─── Neutralize Flarum's lavender control palette ───────────────────
+//
+// Flarum derives a whole family of CSS custom properties from the
+// `theme_secondary_color` admin setting (currently #666e99, a cool
+// lavender-gray). That hue is baked into the COMPILED core CSS as
+// :root vars — there's no LESS var to override — and it surfaces all
+// over: the selected-discussion-row background, toggled-button fills
+// (e.g. the pinned-filter pushpin), tag pills, control backgrounds.
+//
+// It clashes with The Print Trade's warm-neutral system. Rather than
+// changing the DB setting (which would also affect anything keyed to
+// the *primary* color), we redefine the derived vars here. This block
+// wins the cascade because our theme is loaded LAST in
+// `extensions_enabled` — all :root rules share specificity, last wins.
+:root {
+  --muted-color:          @pt-neutral-500;
+
+  --control-bg:           @pt-neutral-100;   // selected discussion row, control fills
+  --control-color:        @pt-neutral-700;
+
+  --header-control-bg:    @pt-neutral-100;
+  --header-control-color: @pt-neutral-700;
+
+  --button-color:         @pt-neutral-700;
+  --button-bg:            @pt-neutral-100;
+  --button-bg-hover:      @pt-neutral-200;
+  --button-bg-disabled:   @pt-neutral-100;
+  --button-inverted-color: @pt-neutral-700;
+
+  --header-colored-control-color:       @pt-neutral-700;
+  --header-colored-control-bg:          @pt-neutral-100;
+  --header-colored-control-bg-shaded:   @pt-neutral-200;
+  --header-colored-control-bg-fadedin:  @pt-neutral-100;
+
+  --tag-bg:    @pt-neutral-100;
+  --tag-color: @pt-neutral-700;
+
+  // Toggled buttons (pinned-filter pushpin, etc.) — was lavender fill
+  // with pale text. Make it a quiet dark-on-light "pressed" state.
+  --button-toggled-color:       @pt-neutral-900;
+  --button-toggled-bg:          @pt-neutral-200;
+  --button-toggled-bg-hover:    @pt-neutral-300;
+  --button-toggled-bg-active:   @pt-neutral-300;
+  --button-toggled-bg-disabled: @pt-neutral-200;
+
+  --hero-bg:    @pt-neutral-50;
+  --hero-color: @pt-neutral-900;
+}
+
 // ─── Global ─────────────────────────────────────────────────────────
 body, .App {
   font-family: @pt-font-body;
