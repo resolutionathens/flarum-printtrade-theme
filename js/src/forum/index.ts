@@ -101,11 +101,70 @@ function injectFooter(): void {
   document.body.appendChild(footer);
 }
 
+// RP-initiated logout configuration.
+//
+// Better-Auth (the parent's OIDC provider) exposes a spec-compliant
+// `end_session_endpoint` at /api/auth/oauth2/endsession. With both
+// `client_id` and `post_logout_redirect_uri` supplied, it kills the
+// parent's session, revokes any access tokens issued to this client,
+// and 302s back to the forum. The redirect URI must match a value
+// registered in the trusted client's redirectUrls — see
+// photozines-exchange:server/utils/auth.ts.
+const PARENT_ENDSESSION = `${SITE_ORIGIN}/api/auth/oauth2/endsession`;
+const FORUM_ROOT = 'https://forum.theprinttrade.com/';
+const OIDC_CLIENT_ID = 'flarum-forum';
+
 app.initializers.add('theprinttrade-printtrade-theme', () => {
   // eslint-disable-next-line no-console
   console.log('[printtrade-theme] initializer registered');
 
   injectFooter();
+
+  // Replace Flarum's stock logout (which only kills the forum session
+  // and redirects to /) with an RP-initiated logout that ALSO kills the
+  // parent's Better-Auth session. Without this, signing out at the
+  // forum leaves the user still authenticated at theprinttrade.com — and
+  // because OAuth then silently re-consents on the next "Log In with
+  // The Print Trade" click, the forum logout effectively does nothing.
+  //
+  // Flow:
+  //  1. Fire-and-forget GET /logout?token=<csrf> to kill the Flarum
+  //     server-side session + cookies. `redirect: 'manual'` because we
+  //     don't care where it 302s; we're about to navigate elsewhere.
+  //  2. Top-level navigate to parent's endsession with both client_id
+  //     and post_logout_redirect_uri. Parent kills its session, then
+  //     302s back to FORUM_ROOT. User lands on the forum index, logged
+  //     out of both systems.
+  //
+  // We monkey-patch `app.session.logout` (not an extend()) because that
+  // method is called from multiple places in Flarum core (SessionDropdown
+  // Log Out item, /logout route handler in some scenarios). Replacing it
+  // wholesale catches every entry point.
+  const originalLogout = app.session.logout?.bind(app.session);
+  (app.session as any).logout = async function () {
+    const csrf = (app.session as any).csrfToken || (app.data as any).csrfToken;
+    try {
+      await fetch(`${app.forum.attribute('baseUrl')}/logout?token=${encodeURIComponent(csrf)}`, {
+        method: 'GET',
+        credentials: 'same-origin',
+        redirect: 'manual',
+      });
+    } catch {
+      // Network failure is non-fatal here. Even if Flarum's session
+      // sticks around for a moment, the next page load (after parent
+      // endsession redirects us back) will encounter no parent session
+      // and prompt re-auth, which will refresh the Flarum session
+      // correctly.
+    }
+    const params = new URLSearchParams({
+      client_id: OIDC_CLIENT_ID,
+      post_logout_redirect_uri: FORUM_ROOT,
+    });
+    window.location.assign(`${PARENT_ENDSESSION}?${params}`);
+  };
+  // Suppress unused-var warning — `originalLogout` is kept in scope as
+  // an escape hatch if the override needs to fall back.
+  void originalLogout;
 
   extend(HeaderPrimary.prototype, 'items', function (this: HeaderPrimary, items: any) {
     CROSS_NAV.forEach((link, i) => {
