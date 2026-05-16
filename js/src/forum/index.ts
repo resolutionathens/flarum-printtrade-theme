@@ -205,7 +205,14 @@ app.initializers.add('theprinttrade-printtrade-theme', () => {
     window.location.assign(app.forum.attribute('baseUrl') + '/auth/generic');
   }
 
-  extend(IndexPage.prototype, 'oncreate', function (this: any, vnode: any) {
+  // NOTE on the `_returnValue` arg: flarum's `extend()` calls our callback
+  // with `(returnValue, ...originalArgs)`. For void-returning methods like
+  // `oncreate(vnode)`, that means our callback receives `(undefined, vnode)`.
+  // The Flarum docstring example shows `function(vnode) {...}` which is
+  // MISLEADING — it would treat `vnode` as `undefined`. We need the second
+  // positional arg. (Same gotcha applies to `onupdate`, `onbeforeremove`,
+  // etc. — anything Mithril lifecycle.)
+  extend(IndexPage.prototype, 'oncreate', function (this: any, _returnValue: any, vnode: any) {
     if (app.session.user) return;
     document.body.classList.add('pt-guest-index');
 
