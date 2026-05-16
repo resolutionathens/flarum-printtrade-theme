@@ -274,26 +274,34 @@ low alpha looked like lavender on the `.TagHero` background; we override
 
 ## Open items (pre-main-site rollout)
 
-1. **Single sign-out is incomplete**. Forum has no logout affordance, and
-   logging out at the parent does not invalidate the forum session. Parent's
-   OIDC discovery doc exposes `end_session_endpoint:
-   /api/auth/oauth2/endsession`, so RP-initiated logout is now feasible:
-   add a Logout link in the avatar dropdown that destroys the Flarum
-   session and redirects to the parent's endsession with a
-   `post_logout_redirect_uri` back to the forum or main site. **Related
-   quirk surfaced during iOS testing**: a returning user with an active
-   parent session gets silent OIDC consent approval — they can't "switch
-   accounts" from inside the forum without first logging out at the parent.
-   Likely the right behavior for SSO-only, but worth knowing.
-2. **Fonts are loaded from Google Fonts CDN** via `@import` at the top of
+1. **Fonts are loaded from Google Fonts CDN** via `@import` at the top of
    `less/forum.less`. Self-host before main site rollout for privacy +
    reliability.
-3. **Bell hidden**. Notifications work but are only reachable via the
+2. **Bell hidden**. Notifications work but are only reachable via the
    `/notifications` URL. Either re-add a quiet bell or accept that
    notifications live in email only.
 
 ### Resolved
 
+- ✅ **RP-initiated single logout** (2026-05-16) — `app.session.logout`
+  is monkey-patched in `js/src/forum/index.ts` to (a) GET
+  `/logout?token=<csrf>` for the Flarum session, then (b) navigate to
+  the parent's `end_session_endpoint` with `client_id=flarum-forum` and
+  `post_logout_redirect_uri=https://forum.theprinttrade.com/`. The
+  parent's trusted-client config in `photozines-exchange:server/utils/auth.ts`
+  registers that exact post-logout URL (strict-equality check). Result:
+  one click kills both sessions and lands at the forum's guest panel.
+  **iOS quirk still applies**: a user logging in at the parent and then
+  hitting the forum gets silent consent approval — they can't "switch
+  accounts" from inside the forum without first invoking this logout.
+- ✅ **Client secret rotated** (2026-05-16) after the original value
+  was inadvertently surfaced in a session transcript. New value lives
+  in Cloudflare Workers secrets (`OIDC_FORUM_CLIENT_SECRET`) and in
+  `flarum_settings` row `fof-oauth.generic.client_secret`. Rotation
+  procedure: generate via `openssl rand -hex 32` to a tempfile, pipe to
+  `wrangler secret put`, then `scp` a small PHP updater into the container
+  and pipe the same value to it via stdin — never expose the secret via
+  argv or stdout.
 - ✅ `id_parameter` migrated from `preferred_username` to `sub`
   (2026-05-16) — see "Identity model" above. All 6 existing
   `flarum_login_providers` rows backfilled with the parent's
