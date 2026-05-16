@@ -164,12 +164,35 @@ swaps the binding via `$container->extend(ResponseFactory::class, ...)`.
 | `fof-oauth.generic.force_userid` | `1` | OIDC's `preferred_username` becomes `provide('username', ...)` rather than `suggest(...)`. Without this, username isn't trusted and auto-create falls through to the modal. |
 | `fof-oauth.generic.force_email` | `1` | OIDC's `email` becomes a trusted-provided field. |
 | `fof-oauth.generic.force_name` | `1` | OIDC's `name` becomes a locked nickname. |
-| `fof-oauth.generic.id_parameter` | `preferred_username` | OIDC claim used as the stable identifier in `flarum_login_providers.identifier`. |
+| `fof-oauth.generic.id_parameter` | `sub` | OIDC claim used as the stable identifier in `flarum_login_providers.identifier`. **Was `preferred_username` pre-2026-05-16; migrated to `sub` (Better-Auth's `user.id`) so username changes at the parent no longer orphan forum accounts.** |
 
-⚠️ `id_parameter = preferred_username` is **not the right choice long-term** —
-preferred_username can change in Better-Auth, which would orphan the
-linked-account row. The correct value is `sub`. Switching now would
-require a migration that maps existing identifiers to subs. See open items.
+### Identity model — single source of truth
+
+After the 2026-05-16 migration, identity is anchored to the parent's
+`user.id` (the immutable Better-Auth nanoid) rather than the derived
+`preferred_username` slug. The relationships are:
+
+```
+theprinttrade.com user.id  (e.g. dgfjyZGksSc6TrVBCiy7iSA7BXDTohb7)
+        │
+        │  emitted as `sub` in OIDC userinfo
+        ▼
+flarum_login_providers.identifier  ← keyed on sub from now on
+        │
+        │  FK → flarum_users.id
+        ▼
+flarum_users (thin shadow row: username, nickname, email, avatar)
+```
+
+- **Parent owns identity.** `sub` cannot change.
+- **`preferred_username` is still emitted by the parent** (derived from
+  email local-part in `getAdditionalUserInfoClaim`) but is now used only
+  as the human-readable Flarum username at auto-create time, not as
+  the identity key.
+- **Username collisions on `preferred_username` no longer compromise
+  identity.** Two users with the same email local-part still trip the
+  `ensureUniqueUsername()` suffix logic on the username, but their
+  `flarum_login_providers.identifier` values remain distinct via `sub`.
 
 ### Quick regression test
 
@@ -252,29 +275,35 @@ low alpha looked like lavender on the `.TagHero` background; we override
 ## Open items (pre-main-site rollout)
 
 1. **Single sign-out is incomplete**. Forum has no logout affordance, and
-   logging out at the parent does not invalidate the forum session. Either
-   add RP-initiated OIDC logout to fof/oauth, or add a Logout link in the
-   avatar dropdown that hits both endpoints. **Related quirk surfaced
-   during iOS testing**: a returning user with an active parent session
-   gets silent OIDC consent approval — they can't "switch accounts" from
-   inside the forum without first logging out at the parent. Likely the
-   right behavior for SSO-only, but worth knowing.
-2. **`id_parameter` should be `sub`, not `preferred_username`**. Current
-   linked-account rows use the preferred_username as identifier, which
-   Better-Auth allows users to change. Migration: for each existing row,
-   look up the user's current `sub` from theprinttrade.com and update
-   the `identifier` column. Until done, a username rename at the parent
-   silently orphans the forum link and triggers a duplicate auto-create
-   on next login.
-3. **Fix composer on the container** so future deploys can use
-   `composer update` instead of the tarball workaround. Suspect:
-   `/opt/flarum/.composer/config.json` `credential.helper` config.
-4. **Fonts are loaded from Google Fonts CDN** via `@import` at the top of
+   logging out at the parent does not invalidate the forum session. Parent's
+   OIDC discovery doc exposes `end_session_endpoint:
+   /api/auth/oauth2/endsession`, so RP-initiated logout is now feasible:
+   add a Logout link in the avatar dropdown that destroys the Flarum
+   session and redirects to the parent's endsession with a
+   `post_logout_redirect_uri` back to the forum or main site. **Related
+   quirk surfaced during iOS testing**: a returning user with an active
+   parent session gets silent OIDC consent approval — they can't "switch
+   accounts" from inside the forum without first logging out at the parent.
+   Likely the right behavior for SSO-only, but worth knowing.
+2. **Fonts are loaded from Google Fonts CDN** via `@import` at the top of
    `less/forum.less`. Self-host before main site rollout for privacy +
    reliability.
-5. **Bell hidden**. Notifications work but are only reachable via the
+3. **Bell hidden**. Notifications work but are only reachable via the
    `/notifications` URL. Either re-add a quiet bell or accept that
    notifications live in email only.
+
+### Resolved
+
+- ✅ `id_parameter` migrated from `preferred_username` to `sub`
+  (2026-05-16) — see "Identity model" above. All 6 existing
+  `flarum_login_providers` rows backfilled with the parent's
+  Better-Auth `user.id`. Verified by login-in-incognito test:
+  no duplicate user row created, `last_login_at` updated on the
+  existing row.
+- ✅ Composer on the container is **not** broken — runs cleanly on
+  2.8.9. The historical TypeError was likely fixed in a Composer
+  point release. Deploy now uses `composer update`; see Deploy
+  section.
 
 ## Useful commands
 
