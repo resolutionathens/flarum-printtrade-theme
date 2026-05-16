@@ -185,4 +185,47 @@ app.initializers.add('theprinttrade-printtrade-theme', () => {
 
     items.replace('newDiscussion', loginButton);
   });
+
+  // For guests, replace the IndexPage body with a centered sign-in panel.
+  //
+  // The stock IndexPage shows the WelcomeHero + sidebar + empty discussion
+  // list to unauth'd visitors — there's no way to read or post without
+  // logging in, so all of that chrome is friction. Hide it and surface a
+  // single clear sign-in CTA instead, matching the parent site's
+  // editorial pattern (Epilogue 800 headline, neutral subtext, brand-blue
+  // primary button).
+  //
+  // Header (cross-nav + Darkroom wordmark) is intentionally preserved so
+  // users can navigate back to the parent site sections. Body class
+  // `pt-guest-index` is added/removed on IndexPage mount/unmount so CSS
+  // can hide the stock content blocks while leaving them untouched for
+  // authenticated users.
+  function gotoLogin(e: Event) {
+    e.preventDefault();
+    window.location.assign(app.forum.attribute('baseUrl') + '/auth/generic');
+  }
+
+  extend(IndexPage.prototype, 'oncreate', function (this: any, vnode: any) {
+    if (app.session.user) return;
+    document.body.classList.add('pt-guest-index');
+
+    const root = vnode.dom as HTMLElement;
+    if (!root || root.querySelector('.pt-guest-login')) return;
+
+    const panel = document.createElement('section');
+    panel.className = 'pt-guest-login';
+    panel.innerHTML = `
+      <p class="pt-guest-login-eyebrow">The Darkroom</p>
+      <h1 class="pt-guest-login-heading">A members-only forum<br>for The Print Trade.</h1>
+      <p class="pt-guest-login-tagline">Discussion of photography, printing, and trading collector-grade prints.</p>
+      <button type="button" class="pt-guest-login-cta">Sign in with The Print Trade</button>
+      <p class="pt-guest-login-meta">New here? <a href="${SITE_ORIGIN}">Create an account at theprinttrade.com</a>, then come back.</p>
+    `;
+    root.prepend(panel);
+    panel.querySelector('.pt-guest-login-cta')!.addEventListener('click', gotoLogin);
+  });
+
+  extend(IndexPage.prototype, 'onremove', function () {
+    document.body.classList.remove('pt-guest-index');
+  });
 });

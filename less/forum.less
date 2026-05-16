@@ -1106,6 +1106,132 @@ a {
   padding: 4rem 0 !important;
 }
 
+// ─── Guest sign-in surface (IndexPage when logged out) ───────────────
+//
+// `body.pt-guest-index` is added by js/src/forum/index.ts when an
+// unauthenticated visitor mounts the IndexPage. We hide the stock hero,
+// sidebar, toolbar, and discussion list, then style the injected
+// `.pt-guest-login` panel as a centered editorial sign-in surface that
+// matches the parent site's section-head pattern.
+//
+// Header (cross-nav + wordmark) and footer stay visible so the page
+// still feels like part of theprinttrade.com — guests can bounce back
+// to Directory / Limited / Exchanges without bouncing through OAuth.
+body.pt-guest-index {
+  .WelcomeHero,
+  .Hero,
+  .IndexPage-toolbar,
+  .IndexPage-results,
+  .IndexPage-nav,
+  .sideNavOffset > .sideNav,
+  .IndexPage .DiscussionList {
+    display: none !important;
+  }
+
+  // IndexPage normally reserves a left rail (sideNav) for the sidebar.
+  // With the sidebar hidden, drop the offset so the panel can center
+  // across the full container width.
+  .sideNavOffset {
+    margin-left: 0 !important;
+  }
+
+  .IndexPage {
+    background: #fff;
+  }
+}
+
+.pt-guest-login {
+  max-width: 36rem;
+  margin: 0 auto;
+  padding: 6rem 1.5rem 5rem;
+  text-align: center;
+}
+
+.pt-guest-login-eyebrow {
+  font-family: @pt-font-label;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: @pt-blue-500;
+  margin: 0 0 1rem;
+  line-height: 1;
+}
+
+.pt-guest-login-heading {
+  font-family: @pt-font-headline;
+  font-weight: 800;
+  font-size: 40px;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  color: @pt-neutral-900;
+  margin: 0 0 1rem;
+}
+
+.pt-guest-login-tagline {
+  font-family: @pt-font-body;
+  font-size: 15px;
+  line-height: 1.6;
+  color: @pt-neutral-500;
+  margin: 0 auto 2.25rem;
+  max-width: 32rem;
+}
+
+.pt-guest-login-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: @pt-blue-500;
+  color: #fff;
+  border: 0;
+  border-radius: 0;
+  font-family: @pt-font-label;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.95rem 2rem;
+  cursor: pointer;
+  transition: background 120ms ease;
+
+  &:hover,
+  &:focus {
+    background: @pt-blue-600;
+    color: #fff;
+    outline: none;
+  }
+}
+
+.pt-guest-login-meta {
+  font-family: @pt-font-body;
+  font-size: 12px;
+  color: @pt-neutral-500;
+  margin: 2rem 0 0;
+
+  a {
+    color: @pt-neutral-900;
+    border-bottom: 1px solid @pt-neutral-300;
+    text-decoration: none;
+
+    &:hover {
+      color: @pt-blue-500;
+      border-bottom-color: @pt-blue-500;
+    }
+  }
+}
+
+@media (max-width: 600px) {
+  .pt-guest-login {
+    padding: 3.5rem 1.25rem 3rem;
+  }
+  .pt-guest-login-heading {
+    font-size: 30px;
+  }
+  .pt-guest-login-tagline {
+    font-size: 14px;
+  }
+}
+
 // ─── Discussion (thread) page ───────────────────────────────────────
 .DiscussionPage-discussion .DiscussionHero {
   background: #fff;
