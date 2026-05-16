@@ -17,6 +17,7 @@ import { extend } from 'flarum/common/extend';
 import HeaderPrimary from 'flarum/forum/components/HeaderPrimary';
 import IndexPage from 'flarum/forum/components/IndexPage';
 import LogInButton from 'flarum/forum/components/LogInButton';
+import SessionDropdown from 'flarum/forum/components/SessionDropdown';
 import Button from 'flarum/common/components/Button';
 
 // NOTE: Flarum 1.x does NOT expose a HeaderTitle component — the
@@ -136,35 +137,51 @@ app.initializers.add('theprinttrade-printtrade-theme', () => {
   //     302s back to FORUM_ROOT. User lands on the forum index, logged
   //     out of both systems.
   //
-  // We monkey-patch `app.session.logout` (not an extend()) because that
-  // method is called from multiple places in Flarum core (SessionDropdown
-  // Log Out item, /logout route handler in some scenarios). Replacing it
-  // wholesale catches every entry point.
-  const originalLogout = app.session.logout?.bind(app.session);
-  (app.session as any).logout = async function () {
-    const csrf = (app.session as any).csrfToken || (app.data as any).csrfToken;
-    try {
-      await fetch(`${app.forum.attribute('baseUrl')}/logout?token=${encodeURIComponent(csrf)}`, {
-        method: 'GET',
-        credentials: 'same-origin',
-        redirect: 'manual',
-      });
-    } catch {
-      // Network failure is non-fatal here. Even if Flarum's session
-      // sticks around for a moment, the next page load (after parent
-      // endsession redirects us back) will encounter no parent session
-      // and prompt re-auth, which will refresh the Flarum session
-      // correctly.
+  // We hook this via `SessionDropdown.prototype.items` rather than by
+  // monkey-patching `app.session.logout`. Earlier attempt did the latter
+  // and crashed the entire theme initializer on guest views because
+  // `app.session` can be undefined at initializer time (Flarum sets it
+  // up during boot but its shape varies across versions/auth states).
+  // The dropdown extend only runs on render, only on authenticated
+  // views (guests don't see SessionDropdown), and never touches
+  // app.session directly.
+  async function rpInitiatedLogout() {
+    const csrf = (app.session as any)?.csrfToken || (app.data as any)?.csrfToken;
+    if (csrf) {
+      try {
+        await fetch(`${app.forum.attribute('baseUrl')}/logout?token=${encodeURIComponent(csrf)}`, {
+          method: 'GET',
+          credentials: 'same-origin',
+          redirect: 'manual',
+        });
+      } catch {
+        // Non-fatal: parent endsession will still kill the Better-Auth
+        // session, and the post-logout redirect back to the forum will
+        // land on a stale Flarum session which the next page load
+        // re-syncs via OAuth.
+      }
     }
     const params = new URLSearchParams({
       client_id: OIDC_CLIENT_ID,
       post_logout_redirect_uri: FORUM_ROOT,
     });
     window.location.assign(`${PARENT_ENDSESSION}?${params}`);
-  };
-  // Suppress unused-var warning — `originalLogout` is kept in scope as
-  // an escape hatch if the override needs to fall back.
-  void originalLogout;
+  }
+
+  extend(SessionDropdown.prototype, 'items', function (this: any, items: any) {
+    if (!items || typeof items.has !== 'function' || !items.has('logOut')) return;
+    const replacement = Button.component(
+      {
+        icon: 'fas fa-sign-out-alt',
+        onclick: (e: MouseEvent) => {
+          e.preventDefault();
+          rpInitiatedLogout();
+        },
+      },
+      app.translator.trans('core.forum.header.log_out_button')
+    );
+    items.replace('logOut', replacement);
+  });
 
   extend(HeaderPrimary.prototype, 'items', function (this: HeaderPrimary, items: any) {
     CROSS_NAV.forEach((link, i) => {
