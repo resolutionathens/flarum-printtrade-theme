@@ -62,7 +62,19 @@ class TopLevelResponseFactory extends BaseResponseFactory
         //    payload → auto-create + log in. This is the path that
         //    eliminates the SignUpModal loop.
         if (! empty($provided['username']) && ! empty($provided['email'])) {
-            $username = $this->ensureUniqueUsername($provided['username']);
+            // After the 2026-05-16 sub migration, `id_parameter = sub`
+            // and fof-oauth's `force_userid = 1` together mean
+            // $provided['username'] is now the 32-char Better-Auth
+            // `sub` — useless as a human-readable username. Source the
+            // real username from the OIDC `preferred_username` claim
+            // (which the parent's getAdditionalUserInfoClaim derives
+            // from the email local-part), falling back to deriving it
+            // ourselves if for any reason the claim is missing.
+            $payload = $registration->getPayload();
+            $rawUsername = ! empty($payload['preferred_username'])
+                ? (string) $payload['preferred_username']
+                : $this->deriveUsernameFromEmail($provided['email']);
+            $username = $this->ensureUniqueUsername($rawUsername);
 
             $user = User::register(
                 $username,
@@ -103,6 +115,22 @@ class TopLevelResponseFactory extends BaseResponseFactory
     protected function makeResponse(array $payload): ResponseInterface
     {
         return new RedirectResponse('/');
+    }
+
+    /**
+     * Fallback username derivation if the OIDC `preferred_username` claim
+     * is missing. Mirrors the parent site's getAdditionalUserInfoClaim
+     * logic so that, in the absence of the claim, both sides converge
+     * on the same slug. Defensive only — under normal operation the
+     * claim is always present.
+     */
+    private function deriveUsernameFromEmail(string $email): string
+    {
+        $local = strtolower((string) strstr($email, '@', true));
+        $slug = preg_replace('/[^a-z0-9_.-]/', '', $local) ?? '';
+        $slug = substr($slug, 0, 30);
+
+        return $slug !== '' ? $slug : 'user';
     }
 
     /**
