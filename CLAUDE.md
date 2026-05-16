@@ -61,33 +61,34 @@ Cribbed from `/Users/slip/Documents/GitHub/photozines-exchange/app/assets/main.c
 
 ## Deploy
 
-Standard path is broken (see below). Current workaround:
-
 ```bash
 # 1. Edit LESS / TS. If TS changed, rebuild bundle:
 cd js && npm run build
 
 # 2. Commit + push.
 git add -A && git commit -m "..." && git push origin master
-SHA=$(git rev-parse HEAD)
 
-# 3. Tarball deploy into vendor dir on the container:
+# 3. Composer-update the theme on the container, then clear cache and
+#    nuke compiled assets so they regenerate from the new source:
 ssh root@178.156.135.154 "docker exec flarum-sg9o4eyorch8eev34l8m5rtq sh -c '\
-  cd /tmp && rm -rf flarum-printtrade-theme-* pt.tar.gz && \
-  curl -sL https://github.com/resolutionathens/flarum-printtrade-theme/archive/$SHA.tar.gz -o pt.tar.gz && \
-  tar xzf pt.tar.gz && \
-  cp -r flarum-printtrade-theme-$SHA/* /opt/flarum/vendor/theprinttrade/flarum-printtrade-theme/ && \
-  chown -R flarum:flarum /opt/flarum/vendor/theprinttrade/flarum-printtrade-theme/ && \
+  cd /opt/flarum && \
+  yasu flarum:flarum composer update theprinttrade/flarum-printtrade-theme --no-cache && \
   yasu flarum:flarum php /opt/flarum/flarum cache:clear && \
   rm -f /data/assets/forum.* /data/assets/admin.* /data/assets/rev-manifest.json'"
 ```
 
-**Composer is broken on this container** — `composer update --no-cache`
-triggers a `TypeError: implode() Argument #2 must be of type ?array` from
-Composer's `Git.php:357`. Suspect cause: stale `credential.helper` config in
-`/opt/flarum/.composer/config.json`. Fixing it would let us use the normal
-`composer update theprinttrade/flarum-printtrade-theme` flow and keep
-composer's installed-version metadata in sync with what's actually on disk.
+Composer pulls a dist-zip from GitHub (no git binary required on the
+container — and there isn't one) and writes a new `reference` to
+`vendor/composer/installed.json`, so on-disk version metadata stays
+accurate. Verified working on Composer 2.8.9 / PHP 8.3.22 in the
+crazymax/flarum:1.8.10 image.
+
+⚠️ Historical: an earlier CLAUDE.md claimed composer was broken with a
+`TypeError: implode() ... in Git.php:357`. That was likely a transient
+bug in an older Composer point release — current 2.8.9 handles the
+flow cleanly. If it reappears, the tarball fallback (curl the GitHub
+archive tarball, untar over the vendor dir) is the documented
+workaround in git history.
 
 ## Flarum 1.x gotchas
 
